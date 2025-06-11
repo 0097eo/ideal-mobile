@@ -49,12 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUser(user);
                 }
             } catch (error) {
-                console.error('Error loading stored auth:', error);
                 // Clear invalid tokens
                 await SecureStore.deleteItemAsync("access_token").catch(() => {});
                 await SecureStore.deleteItemAsync("refresh_token").catch(() => {});
                 setToken(null);
                 setUser(null);
+                throw error; // ← Throw instead of logging
             } finally {
                 setIsLoading(false);
             }
@@ -99,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await SecureStore.setItemAsync("access_token", data.access);
             await SecureStore.setItemAsync("refresh_token", data.refresh);
         } catch (error) {
-            console.error('Login error:', error);
             throw error;
         }
     };
@@ -112,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await SecureStore.deleteItemAsync("access_token").catch(() => {});
             await SecureStore.deleteItemAsync("refresh_token").catch(() => {});
         } catch (error) {
-            console.error('Logout error:', error);
+            throw error; // ← Throw instead of logging
         }
     };
 
@@ -137,8 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await SecureStore.setItemAsync("access_token", data.access);
             return true;
         } catch (error) {
-            console.error('Refresh token error:', error);
-            return false;
+            throw error; // ← Throw instead of logging
         }
     };
 
