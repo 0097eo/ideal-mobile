@@ -15,6 +15,7 @@ export interface AuthContextType {
     token: string | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () =>  Promise<void>;
+    verifyEmail: (email: string, verificationCode: string) => Promise<any>,
     refreshToken: () => Promise<boolean>;
     isAuthenticated: boolean;
     isLoading: boolean;

@@ -8,6 +8,7 @@ const AuthContext = createContext<AuthContextType>({
     token: null,
     login: async () => {},
     logout: async () => {},
+    verifyEmail: async () => {},
     isAuthenticated: false,
     refreshToken: async () => false,
     isLoading: true,
@@ -103,6 +104,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const verifyEmail = async (email: string, verificationCode: string) => {
+        try {
+            const response = await fetch(`${API_URL}/accounts/verify-email/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ 
+                    email, 
+                    verification_code: verificationCode 
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || errorData.detail || "Verification failed");
+            }
+
+            const data = await response.json();
+
+            // If tokens are returned, log the user in automatically
+            if (data.access && data.refresh && data.user) {
+                const user: User = {
+                    id: data.user.id.toString(),
+                    email: data.user.email,
+                    name: `${data.user.first_name} ${data.user.last_name}`.trim(),
+                    first_name: data.user.first_name,
+                    last_name: data.user.last_name,
+                    phone_number: data.user.phone_number,
+                    user_type: data.user.user_type,
+                    is_admin: data.user.is_admin,
+                    is_verified: data.user.is_verified,
+                };
+
+                setUser(user);
+                setToken(data.access);
+                
+                // Store tokens securely
+                await SecureStore.setItemAsync("access_token", data.access);
+                await SecureStore.setItemAsync("refresh_token", data.refresh);
+            }
+
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             setUser(null);
@@ -145,7 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             user, 
             token, 
             login, 
-            logout, 
+            logout,
+            verifyEmail,
             refreshToken,
             isAuthenticated: !!user && !!token, 
             isLoading 
