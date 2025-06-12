@@ -11,22 +11,22 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useThemes } from '@/hooks/themes';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import CustomAlert from '@/components/CustomAlert';
 
 interface LoginPageProps {
-  onNavigateToSignup?: () => void;
   onNavigateToForgotPassword?: () => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
-  onNavigateToSignup,
   onNavigateToForgotPassword,
 }) => {
   const { login, isLoading: authLoading } = useAuth();
   const { colors } = useThemes();
+  const router = useRouter();
   
   // Form state
   const [email, setEmail] = useState('');
@@ -135,6 +135,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSignupClick = () => {
+    router.push('/signup');
   };
 
   const styles = StyleSheet.create({
@@ -417,7 +421,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don't have an account?</Text>
             <TouchableOpacity
-              onPress={onNavigateToSignup}
+              onPress={handleSignupClick}
               disabled={isLoading}
             >
               <Text style={styles.signupLink}>Sign Up</Text>
