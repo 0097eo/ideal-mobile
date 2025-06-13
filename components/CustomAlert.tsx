@@ -69,7 +69,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, fadeAnim, scaleAnim]);
 
   const getIconAndColor = () => {
     switch (type) {

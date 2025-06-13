@@ -60,7 +60,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="account"
           options={{
-            headerShown: false,
+            //headerShown: false,
             title: "Account",
             tabBarIcon: ({ color }) => <User size={24} color={color} />,
           }}

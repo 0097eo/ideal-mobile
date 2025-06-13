@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { useThemes } from '@/hooks/themes';
+
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -10,13 +12,15 @@ interface LoadingSpinnerProps {
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = 'Loading...',
   size = 'large',
-  color = '#007AFF'
+  color,
 }) => {
+  const { colors } = useThemes();
+
   return (
-    <View style={styles.container}>
-      <View style={styles.spinnerContainer}>
-        <ActivityIndicator size={size} color={color} />
-        {message && <Text style={styles.message}>{message}</Text>}
+    <View style={[styles.container, { backgroundColor: colors.modalOverlay }]}>
+      <View style={[styles.spinnerContainer, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+        <ActivityIndicator size={size} color={color || colors.primary} />
+        {message && <Text style={[styles.message, { color: colors.text }]}>{message}</Text>}
       </View>
     </View>
   );
@@ -29,21 +33,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
   spinnerContainer: {
-    backgroundColor: 'white',
     padding: 30,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
@@ -51,17 +49,22 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 15,
     fontSize: 16,
-    color: '#333',
     textAlign: 'center',
     fontWeight: '500',
   },
 });
 
-export const FullScreenLoader: React.FC<LoadingSpinnerProps> = (props) => {
+export const FullScreenLoader: React.FC<LoadingSpinnerProps> = ({
+  message = 'Loading...',
+  size = 'large',
+  color,
+}) => {
+  const { colors } = useThemes();
+
   return (
-    <View style={fullScreenStyles.fullScreenContainer}>
-      <ActivityIndicator size="large" color={props.color || '#007AFF'} />
-      {props.message && <Text style={fullScreenStyles.fullScreenMessage}>{props.message}</Text>}
+    <View style={[fullScreenStyles.fullScreenContainer, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size={size} color={color || colors.primary} />
+      {message && <Text style={[fullScreenStyles.fullScreenMessage, { color: colors.textSecondary }]}>{message}</Text>}
     </View>
   );
 };
@@ -71,15 +74,11 @@ const fullScreenStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   fullScreenMessage: {
     marginTop: 20,
     fontSize: 18,
-    color: '#666',
     textAlign: 'center',
     fontWeight: '600',
   },
 });
-
-
