@@ -17,6 +17,10 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textSecondary,
+          tabBarLabelStyle: {
+            fontSize: 13,
+            fontWeight: "600",
+          },
           tabBarStyle: {
             backgroundColor: colors.navigationBackground,
             borderTopColor: colors.border,
@@ -60,7 +64,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="account"
           options={{
-            //headerShown: false,
+            headerShown: false,
             title: "Account",
             tabBarIcon: ({ color }) => <User size={24} color={color} />,
           }}

@@ -39,7 +39,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const formatPrice = (price: string) => `KES ${parseFloat(price).toFixed(2)}`;
+  const formatPrice = (price: string) => {
+    const wholeNumber = Math.floor(parseFloat(price));
+    return `KES ${wholeNumber.toLocaleString()}`;
+  };
 
   const getConditionColor = (condition: string) => {
     switch (condition) {
