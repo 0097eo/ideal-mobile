@@ -44,7 +44,8 @@ export const useThemes = () => {
     const deviceColorScheme = Appearance.getColorScheme();
 
     //state for manual override
-    const [manualColorScheme, setManualColorScheme] = useState(null);
+    const [manualColorScheme, setManualColorScheme] = useState<"light" | "dark" | null>(null);
+
 
     //state for current theme
     const [systemColorScheme, setSystemColorScheme] = useState(deviceColorScheme);
@@ -99,6 +100,8 @@ export const useThemes = () => {
         toggleColorScheme,
         
         // Helper function to create styles with theme colors
-        createStyles: (styleFunction) => styleFunction(colors),
+        createStyles: <T extends object>(styleFunction: (colors: typeof lightTheme) => T): T =>
+        styleFunction(colors),
+
     };
 };
