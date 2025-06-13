@@ -66,7 +66,6 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
       setWishlistProducts(products);
       setWishlistItems(new Set(products.map(product => product.id)));
     } catch (err) {
-      console.error('Error fetching wishlist:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch wishlist');
     } finally {
       setLoading(false);
@@ -102,7 +101,6 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
 
       return true;
     } catch (err) {
-      console.error('Error adding to wishlist:', err);
       setError(err instanceof Error ? err.message : 'Failed to add to wishlist');
       Alert.alert('Error', 'Failed to add item to wishlist. Please try again.');
       return false;
@@ -137,7 +135,6 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
 
       return true;
     } catch (err) {
-      console.error('Error removing from wishlist:', err);
       setError(err instanceof Error ? err.message : 'Failed to remove from wishlist');
       Alert.alert('Error', 'Failed to remove item from wishlist. Please try again.');
       return false;

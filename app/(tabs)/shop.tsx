@@ -162,7 +162,6 @@ const Shop = () => {
       setNextPageUrl(data.next);
       
     } catch (err) {
-      console.error('Error fetching products:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch products';
       setError(errorMessage);
       
@@ -245,7 +244,7 @@ const Shop = () => {
       backgroundColor: colors.background,
     },
     header: {
-      padding: 16,
+      padding: 30,
       backgroundColor: colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
