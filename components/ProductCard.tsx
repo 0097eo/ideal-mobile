@@ -144,7 +144,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         textTransform: "uppercase",
       },
       productName: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: "700",
         color: colors.text,
         marginBottom: 8,
@@ -157,7 +157,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         marginBottom: 8,
       },
       price: {
-        fontSize: 20,
+        fontSize: 14,
         fontWeight: "800",
         color: colors.primary,
       },
