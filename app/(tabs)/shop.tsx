@@ -53,6 +53,11 @@ const Shop = () => {
   const [hasNextPage, setHasNextPage] = useState<boolean>(false);
   const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState('');
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState('');
+  const [debouncedMaterial, setDebouncedMaterial] = useState('');
+  const [debouncedCondition, setDebouncedCondition] = useState('');
   
   // Alert state
   const [alert, setAlert] = useState<AlertState>({
@@ -75,8 +80,50 @@ const Shop = () => {
   });
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(filters.search);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [filters.search]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMinPrice(filters.minPrice);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [filters.minPrice]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMaxPrice(filters.maxPrice);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [filters.maxPrice]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMaterial(filters.material);
+    }, 500);
+    return () => clearTimeout(handler);
+  }
+  , [filters.material]);
+
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCondition(filters.condition);
+    }, 500);
+    return () => clearTimeout(handler);
+  }
+  , [filters.condition]);
+
+
   // Show alert helper function
-  const showAlert = (
+  const showAlert = useCallback((
     type: 'success' | 'error' | 'warning' | 'info',
     title: string,
     message: string,
@@ -93,7 +140,7 @@ const Shop = () => {
       confirmText,
       showCancel,
     });
-  };
+  }, [setAlert]);
 
   // Hide alert
   const hideAlert = () => {
@@ -101,30 +148,39 @@ const Shop = () => {
   };
 
   // Build query parameters from filters
-  const buildQueryParams = (additionalParams: Record<string, any> = {}) => {
+  const buildQueryParams = useCallback((additionalParams: Record<string, any> = {}) => {
     const params = new URLSearchParams();
-    
-    if (filters.search) params.append('search', filters.search);
+
+    if (debouncedSearch) params.append('search', debouncedSearch);
     if (filters.category) params.append('category', filters.category);
-    if (filters.material) params.append('material', filters.material);
-    if (filters.condition) params.append('condition', filters.condition);
-    if (filters.minPrice) params.append('min_price', filters.minPrice);
-    if (filters.maxPrice) params.append('max_price', filters.maxPrice);
+    if (debouncedMaterial) params.append('material', debouncedMaterial);
+    if (debouncedCondition) params.append('condition', debouncedCondition);
+    if (debouncedMinPrice) params.append('min_price', debouncedMinPrice);
+    if (debouncedMaxPrice) params.append('max_price', debouncedMaxPrice);
     if (filters.available !== null) params.append('available', filters.available.toString());
     if (filters.ordering) params.append('ordering', filters.ordering);
-    
-    // Add any additional parameters
+
     Object.entries(additionalParams).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         params.append(key, value.toString());
       }
     });
-    
+
     return params.toString();
-  };
+  }, [
+    debouncedSearch,
+    filters.category,
+    debouncedMaterial,
+    debouncedCondition,
+    debouncedMinPrice,
+    debouncedMaxPrice,
+    filters.available,
+    filters.ordering
+  ]);
+
 
   // Fetch products from API
-  const fetchProducts = async (isLoadMore: boolean = false, customUrl?: string) => {
+  const fetchProducts = useCallback(async (isLoadMore: boolean = false, customUrl?: string) => {
     try {
       if (!isLoadMore) {
         setLoading(true);
@@ -179,26 +235,26 @@ const Shop = () => {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  };
+  }, [buildQueryParams, showAlert]);
 
 
   // Handle search
   const handleSearch = useCallback(() => {
     fetchProducts();
-  }, [filters]);
+  }, [fetchProducts]);
 
   // Handle load more
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !loadingMore && nextPageUrl) {
       fetchProducts(true, nextPageUrl);
     }
-  };
+  }, [hasNextPage, loadingMore, nextPageUrl, fetchProducts]);
 
   // Handle refresh
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchProducts();
-  };
+  }, [fetchProducts]);
 
   // Reset filters
   const resetFilters = () => {
@@ -227,16 +283,12 @@ const Shop = () => {
   // Initial load
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [fetchProducts]);
 
-  // Search when filters change (with debounce effect)
+  // Search when filters change
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
       fetchProducts();
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [filters]);
+  }, [fetchProducts]);
 
   const styles = createStyles((colors) => StyleSheet.create({
     container: {
