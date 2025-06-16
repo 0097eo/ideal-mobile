@@ -546,17 +546,6 @@ const Index = () => {
     </View>
   );
 
-  const renderCategory = ({ item }: { item: Category }) => (
-    <TouchableOpacity style={styles.categoryCard}>
-      <Image 
-        source={{ uri: item.image }} 
-        style={{ width: '100%', height: 80, borderRadius: 12, marginBottom: 8 }}
-      />
-      <Text style={styles.categoryName}>{item.name}</Text>
-      <Text style={styles.categoryDescription}>{item.desription}</Text>
-    </TouchableOpacity>
-  );
-
   const renderTestimonial = ({ item }: { item: Testimonial }) => (
     <View style={styles.testimonialCard}>
       <View style={styles.testimonialHeader}>
@@ -568,7 +557,7 @@ const Index = () => {
       </View>
       <View style={styles.starsContainer}>
         {Array.from({ length: 5 }, (_, i) => (
-          <Text key={i} style={styles.star}>
+          <Text key={`star-${item.id}-${i}`} style={styles.star}>
             {i < item.rating ? '★' : '☆'}
           </Text>
         ))}
@@ -649,7 +638,16 @@ const Index = () => {
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>Shop by Category</Text>
           <View style={styles.categoriesGrid}>
-            {categories.map((category) => renderCategory({ item: category }))}
+            {categories.map((category) => (
+              <TouchableOpacity key={category.id} style={styles.categoryCard}>
+                <Image 
+                  source={{ uri: category.image }} 
+                  style={{ width: '100%', height: 80, borderRadius: 12, marginBottom: 8 }}
+                />
+                <Text style={styles.categoryName}>{category.name}</Text>
+                <Text style={styles.categoryDescription}>{category.desription}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
