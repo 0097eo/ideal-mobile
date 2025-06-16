@@ -6,11 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import React, {useState, useEffect, useCallback} from 'react'
 import { useThemes } from '@/hooks/themes'
 import ProductCard from '@/components/ProductCard'
-import { Product } from '@/types/product'
+import { Product, Category } from '@/types/product'
 import { API_URL } from '@/constants/api'
 import CustomAlert from '@/components/CustomAlert';
 import { FullScreenLoader } from '@/components/LoadingSpinner';
@@ -47,7 +49,9 @@ interface AlertState {
 const Shop = () => {
   const { colors, createStyles } = useThemes();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [hasNextPage, setHasNextPage] = useState<boolean>(false);
@@ -58,6 +62,9 @@ const Shop = () => {
   const [debouncedMaxPrice, setDebouncedMaxPrice] = useState('');
   const [debouncedMaterial, setDebouncedMaterial] = useState('');
   const [debouncedCondition, setDebouncedCondition] = useState('');
+  const [debouncedCategory, setDebouncedCategory] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState<boolean>(false);
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('All Categories');
   
   // Alert state
   const [alert, setAlert] = useState<AlertState>({
@@ -106,21 +113,26 @@ const Shop = () => {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedMaterial(filters.material);
+      setDebouncedMaterial(filters.material?.toUpperCase() || '');
     }, 500);
     return () => clearTimeout(handler);
-  }
-  , [filters.material]);
-
+  }, [filters.material]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedCondition(filters.condition);
+      setDebouncedCondition(filters.condition?.toUpperCase() || '');
     }, 500);
     return () => clearTimeout(handler);
-  }
-  , [filters.condition]);
+  }, [filters.condition]);
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCategory(filters.category || '');
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [filters.category]);
+
+  
 
   // Show alert helper function
   const showAlert = useCallback((
@@ -147,12 +159,56 @@ const Shop = () => {
     setAlert(prev => ({ ...prev, visible: false }));
   };
 
+  // Fetch categories from API
+  const fetchCategories = useCallback(async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await fetch(`${API_URL}/products/categories/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+
+      const data: Category[] = await response.json();
+      setCategories(data);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      showAlert(
+        'error',
+        'Error',
+        'Failed to load categories. Some filters may not be available.',
+        undefined,
+        'OK',
+        false
+      );
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, [showAlert]);
+
+  // Handle category selection
+  const handleCategorySelect = (category: Category | null) => {
+    if (category) {
+      setFilters(prev => ({ ...prev, category: category.id.toString() }));
+      setSelectedCategoryName(category.name);
+    } else {
+      setFilters(prev => ({ ...prev, category: '' }));
+      setSelectedCategoryName('All Categories');
+    }
+    setShowCategoryDropdown(false);
+  };
+
   // Build query parameters from filters
   const buildQueryParams = useCallback((additionalParams: Record<string, any> = {}) => {
     const params = new URLSearchParams();
 
     if (debouncedSearch) params.append('search', debouncedSearch);
-    if (filters.category) params.append('category', filters.category);
+    if (debouncedCategory) params.append('category', debouncedCategory);
     if (debouncedMaterial) params.append('material', debouncedMaterial);
     if (debouncedCondition) params.append('condition', debouncedCondition);
     if (debouncedMinPrice) params.append('min_price', debouncedMinPrice);
@@ -169,7 +225,7 @@ const Shop = () => {
     return params.toString();
   }, [
     debouncedSearch,
-    filters.category,
+    debouncedCategory,
     debouncedMaterial,
     debouncedCondition,
     debouncedMinPrice,
@@ -177,7 +233,6 @@ const Shop = () => {
     filters.available,
     filters.ordering
   ]);
-
 
   // Fetch products from API
   const fetchProducts = useCallback(async (isLoadMore: boolean = false, customUrl?: string) => {
@@ -237,7 +292,6 @@ const Shop = () => {
     }
   }, [buildQueryParams, showAlert]);
 
-
   // Handle search
   const handleSearch = useCallback(() => {
     fetchProducts();
@@ -273,6 +327,7 @@ const Shop = () => {
           available: null,
           ordering: '-created_at'
         });
+        setSelectedCategoryName('All Categories');
         showAlert('success', 'Filters Reset', 'All filters have been cleared successfully.');
       },
       'Reset',
@@ -282,12 +337,13 @@ const Shop = () => {
 
   // Initial load
   useEffect(() => {
+    fetchCategories();
     fetchProducts();
-  }, [fetchProducts]);
+  }, [fetchCategories, fetchProducts]);
 
   // Search when filters change
   useEffect(() => {
-      fetchProducts();
+    fetchProducts();
   }, [fetchProducts]);
 
   const styles = createStyles((colors) => StyleSheet.create({
@@ -354,6 +410,25 @@ const Shop = () => {
       color: colors.text,
       backgroundColor: colors.background,
     },
+    categoryDropdown: {
+      flex: 1,
+      height: 40,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      marginHorizontal: 4,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+    },
+    categoryDropdownText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    categoryDropdownPlaceholder: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
     resetButton: {
       backgroundColor: colors.error,
       paddingHorizontal: 16,
@@ -412,6 +487,56 @@ const Shop = () => {
       color: colors.textSecondary,
       fontSize: 14,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      margin: 20,
+      borderRadius: 12,
+      padding: 20,
+      maxHeight: '70%',
+      width: '80%',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    categoryOption: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    categoryOptionText: {
+      fontSize: 16,
+      color: colors.text,
+    },
+    selectedCategoryOption: {
+      backgroundColor: colors.primary + '20',
+    },
+    selectedCategoryOptionText: {
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    modalCloseButton: {
+      marginTop: 16,
+      backgroundColor: colors.textSecondary,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    modalCloseButtonText: {
+      color: colors.surface,
+      fontWeight: '600',
+    },
   }));
 
   // Render product item
@@ -436,6 +561,64 @@ const Shop = () => {
       </View>
     );
   };
+
+  const renderCategoryModal = () => (
+    <Modal
+      visible={showCategoryDropdown}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setShowCategoryDropdown(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Select Category</Text>
+          <ScrollView>
+            {/* All Categories option */}
+            <TouchableOpacity
+              style={[
+                styles.categoryOption,
+                !filters.category && styles.selectedCategoryOption
+              ]}
+              onPress={() => handleCategorySelect(null)}
+            >
+              <Text style={[
+                styles.categoryOptionText,
+                !filters.category && styles.selectedCategoryOptionText
+              ]}>
+                All Categories
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Category options */}
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryOption,
+                  filters.category === category.id.toString() && styles.selectedCategoryOption
+                ]}
+                onPress={() => handleCategorySelect(category)}
+              >
+                <Text style={[
+                  styles.categoryOptionText,
+                  filters.category === category.id.toString() && styles.selectedCategoryOptionText
+                ]}>
+                  {category.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          
+          <TouchableOpacity
+            style={styles.modalCloseButton}
+            onPress={() => setShowCategoryDropdown(false)}
+          >
+            <Text style={styles.modalCloseButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
 
   // Show full screen loader when initially loading
   if (loading && products.length === 0) {
@@ -528,6 +711,22 @@ const Shop = () => {
               onChangeText={(text) => setFilters(prev => ({ ...prev, condition: text }))}
             />
           </View>
+
+          <View style={styles.filterRow}>
+            {/* Category Dropdown */}
+            <TouchableOpacity
+              style={styles.categoryDropdown}
+              onPress={() => setShowCategoryDropdown(true)}
+              disabled={categoriesLoading}
+            >
+              <Text style={[
+                styles.categoryDropdownText,
+                !filters.category && styles.categoryDropdownPlaceholder
+              ]}>
+                {categoriesLoading ? 'Loading...' : selectedCategoryName}
+              </Text>
+            </TouchableOpacity>
+          </View>
           
           <TouchableOpacity style={styles.resetButton} onPress={resetFilters}>
             <Text style={styles.resetButtonText}>Reset Filters</Text>
@@ -564,6 +763,9 @@ const Shop = () => {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Category Dropdown Modal */}
+      {renderCategoryModal()}
 
       {/* Custom Alert */}
       <CustomAlert
