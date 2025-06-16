@@ -596,19 +596,17 @@ const Index = () => {
           ]}
         >
           <Text style={styles.heroTitle}>
-            Modern Furniture for Every Home
+            Ideal Furniture
           </Text>
           <Text style={styles.heroSubtitle}>
-            Discover our curated collection of premium furniture. From contemporary sofas to elegant dining sets, find pieces that transform your space.
+            &quot;Comfort in style&quot;
           </Text>
         </Animated.View>
 
         {/* Trending Products Section */}
         <View style={styles.trendingSection}>
           <Text style={styles.sectionTitle}>Trending Products</Text>
-          <Text style={styles.sectionSubtitle}>
-            Discover our most popular furniture pieces loved by customers
-          </Text>
+          
           
           {productsLoading ? (
             <View style={styles.loadingContainer}>
@@ -650,9 +648,6 @@ const Index = () => {
         {/* Categories Section */}
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>Shop by Category</Text>
-          <Text style={styles.sectionSubtitle}>
-            Find the perfect furniture for every room in your home
-          </Text>
           <View style={styles.categoriesGrid}>
             {categories.map((category) => renderCategory({ item: category }))}
           </View>

@@ -129,6 +129,9 @@ const Cart: React.FC = () => {
           <Text style={styles.productPrice}>
             KES {Math.floor(parseFloat(item.product_price)).toLocaleString()}
           </Text>
+          <Text style={styles.quantityText}>
+            Quantity: {item.quantity}
+          </Text>
           <Text style={styles.subtotal}>
             Subtotal: KES {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
           </Text>
