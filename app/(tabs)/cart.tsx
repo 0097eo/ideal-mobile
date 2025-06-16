@@ -181,7 +181,7 @@ const Cart: React.FC = () => {
     const styles = createStyles(colors);
     return (
       <View style={styles.emptyCart}>
-        <Ionicons name="bag-outline" size={80} color={colors.textTertiary} />
+        <Ionicons name="cart" size={80} color={colors.textTertiary} />
         <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
         <Text style={styles.emptyCartSubtitle}>
           Add some items to get started
@@ -259,7 +259,7 @@ const Cart: React.FC = () => {
             </View>
             
             <TouchableOpacity style={styles.checkoutButton}>
-              <Text style={styles.checkoutButtonText} onPress={() => router.push('/checkout')}>
+              <Text style={styles.checkoutButtonText} onPress={() => router.push('/(screens)/checkout')}>
                 Proceed to Checkout
               </Text>
             </TouchableOpacity>
