@@ -251,7 +251,7 @@ const ProductDetailsPage: React.FC = () => {
           showCancel: true,
           onConfirm: () => {
             hideAlert();
-            router.push("/checkout");
+            router.push("/(screens)/checkout");
           },
         });
       } else {
