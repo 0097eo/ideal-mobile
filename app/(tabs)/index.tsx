@@ -87,7 +87,7 @@ const Index = () => {
       id: 1,
       icon: 'car-outline',
       title: 'Free Delivery',
-      description: 'Free delivery on orders over KES 50,000. Fast and reliable shipping nationwide.',
+      description: 'Free delivery on orders over KSh 50,000. Fast and reliable shipping nationwide.',
     },
     {
       id: 2,

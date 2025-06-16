@@ -41,7 +41,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const formatPrice = (price: string) => {
     const wholeNumber = Math.floor(parseFloat(price));
-    return `KES ${wholeNumber.toLocaleString()}`;
+    return `KSh ${wholeNumber.toLocaleString()}`;
   };
 
   const getConditionColor = (condition: string) => {

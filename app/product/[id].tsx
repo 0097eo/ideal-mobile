@@ -275,7 +275,7 @@ const ProductDetailsPage: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: string) => `KES ${parseFloat(price).toLocaleString()}`;
+  const formatPrice = (price: string) => `KSh ${parseFloat(price).toLocaleString()}`;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

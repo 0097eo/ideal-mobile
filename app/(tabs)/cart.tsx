@@ -127,13 +127,13 @@ const Cart: React.FC = () => {
             {item.product_name}
           </Text>
           <Text style={styles.productPrice}>
-            KES {Math.floor(parseFloat(item.product_price)).toLocaleString()}
+            KSh {Math.floor(parseFloat(item.product_price)).toLocaleString()}
           </Text>
           <Text style={styles.quantityText}>
             Quantity: {item.quantity}
           </Text>
           <Text style={styles.subtotal}>
-            Subtotal: KES {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
+            Subtotal: KSh {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
           </Text>
         </View>
       </View>
@@ -254,7 +254,7 @@ const Cart: React.FC = () => {
                 Items ({getCartItemCount()})
               </Text>
               <Text style={styles.summaryValue}>
-                KES {Math.floor(getCartTotal()).toLocaleString()}
+                KSh {Math.floor(getCartTotal()).toLocaleString()}
               </Text>
             </View>
             
