@@ -6,20 +6,45 @@ export default function ScreensLayout() {
       <Stack.Screen 
         name="checkout" 
         options={{ 
-          title: "Checkout",
-          presentation: "modal"
+          presentation: "modal",
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="orderConfirmation" 
         options={{ 
-          title: "Order Confirmed",
-          headerBackVisible: false
+          headerShown: false
         }} 
       />
       <Stack.Screen 
         name="order-details/[orderId]" 
-        options={{ title: "Order Details" }} 
+        options={{ 
+          headerShown: false
+        }} 
+      />
+      <Stack.Screen
+        name="profile"
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="orders"
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="reviews"
+        options={{
+          headerShown: false
+        }}
+      />
+      <Stack.Screen
+        name="vouchers"
+        options={{
+          headerShown: false
+        }}
       />
     </Stack>
   );
