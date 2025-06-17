@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '@/constants/api';
 import { CartItem, Cart, CartState } from '@/types/cart';
@@ -153,7 +153,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
   // API Functions
-  const fetchCart = async (): Promise<void> => {
+  const fetchCart = useCallback(async (): Promise<void> => {
     try {
       dispatch({ type: CART_ACTIONS.SET_LOADING, payload: true });
       
@@ -172,7 +172,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     } catch (error) {
       dispatch({ type: CART_ACTIONS.SET_ERROR, payload: handleApiError(error) });
     }
-  };
+  }, []);
+
 
   const addToCart = async (productId: number, quantity: number = 1): Promise<ApiResponse<Cart>> => {
     try {
@@ -303,7 +304,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   // Load cart on mount
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [fetchCart]);
 
   const contextValue: CartContextType = {
     // State
