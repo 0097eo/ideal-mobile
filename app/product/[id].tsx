@@ -285,11 +285,16 @@ const ProductDetailsPage: React.FC = () => {
 
   const renderStars = (rating: number) => {
     const stars = [];
+    const roundedRating = Math.round(rating);
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <Text key={i} style={{ color: i <= rating ? colors.warning : colors.textTertiary }}>
-          ⭐
-        </Text>
+        <Ionicons
+          key={i}
+          name={i <= roundedRating ? "star" : "star-outline"}
+          size={16}
+          color={i <= roundedRating ? colors.warning : colors.textTertiary}
+          style={{ marginRight: 2 }}
+        />
       );
     }
     return stars;
@@ -565,13 +570,16 @@ const ProductDetailsPage: React.FC = () => {
         marginBottom: 8,
       },
       reviewUser: {
+        flex: 1,
         fontSize: 16,
         fontWeight: "600",
         color: colors.text,
+        marginRight: 8,
       },
       reviewDate: {
         fontSize: 12,
         color: colors.textSecondary,
+        flexShrink: 0,
       },
       reviewRating: {
         flexDirection: "row",
@@ -782,7 +790,7 @@ const ProductDetailsPage: React.FC = () => {
             <Text style={styles.price}>{formatPrice(product.price)}</Text>
             {product.average_rating && (
               <View style={styles.ratingContainer}>
-                {renderStars(Math.round(product.average_rating))}
+                {renderStars(product.average_rating)}
                 <Text style={styles.rating}>{product.average_rating.toFixed(1)}</Text>
                 <Text style={styles.reviewCount}>({product.review_count})</Text>
               </View>
