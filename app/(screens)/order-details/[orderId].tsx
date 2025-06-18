@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -46,7 +46,7 @@ const OrderDetails = () => {
   const { colors, isDark } = useThemes();
 
   // Helper function to show custom alert
-  const showAlert = (config: {
+  const showAlert = useCallback((config: {
     type: 'success' | 'error' | 'warning' | 'info';
     title: string;
     message: string;
@@ -65,42 +65,7 @@ const OrderDetails = () => {
       showCancel: config.showCancel || false,
     });
     setAlertVisible(true);
-  };
-
-  const fetchOrderDetails = async () => {
-    try {
-      const token = await SecureStore.getItemAsync('access_token');
-      
-      const response = await fetch(`${API_URL}/orders/orders/${orderId}/`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setOrder(data);
-        setShippingAddress(data.shipping_address || '');
-        setBillingAddress(data.billing_address || '');
-      } else {
-        showAlert({
-          type: 'error',
-          title: 'Error',
-          message: 'Failed to fetch order details'
-        });
-      }
-    } catch (error) {
-      showAlert({
-        type: 'error',
-        title: 'Error',
-        message: 'Network error occurred'
-      });
-      throw error
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
 
   const cancelOrder = async () => {
     if (!order) return;
@@ -247,10 +212,45 @@ const OrderDetails = () => {
   };
 
   useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('access_token');
+        
+        const response = await fetch(`${API_URL}/orders/orders/${orderId}/`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+  
+        if (response.ok) {
+          const data = await response.json();
+          setOrder(data);
+          setShippingAddress(data.shipping_address || '');
+          setBillingAddress(data.billing_address || '');
+        } else {
+          showAlert({
+            type: 'error',
+            title: 'Error',
+            message: 'Failed to fetch order details'
+          });
+        }
+      } catch (error) {
+        showAlert({
+          type: 'error',
+          title: 'Error',
+          message: 'Network error occurred'
+        });
+        throw error
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (orderId) {
       fetchOrderDetails();
     }
-  }, [orderId]);
+  }, [orderId, showAlert]);
 
   const getStatusColor = (status: Order['status']) => {
     switch (status) {

@@ -53,7 +53,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
   });
   
   const [errors, setErrors] = useState<ProfileErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [ isLoading ] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   // Alert states
