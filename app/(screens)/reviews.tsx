@@ -68,7 +68,6 @@ const Header: React.FC<HeaderProps> = ({ title, onBackPress }) => {
         <Ionicons name="arrow-back" size={24} color={colors.navigationText} />
       </TouchableOpacity>
       <Text style={[styles.headerTitle, { color: colors.navigationText }]}>{title}</Text>
-      <View style={styles.headerPlaceholder} />
     </View>
   );
 };
@@ -156,7 +155,7 @@ const Reviews: React.FC = () => {
       }
     } catch (error) {
       showAlert('error', 'Error', 'Failed to load delivered orders');
-      throw error
+      if (error instanceof Error) throw error;
     }
   }, [showAlert]);
 
@@ -177,7 +176,7 @@ const Reviews: React.FC = () => {
         setUserReviews(reviews);
       }
     } catch (error) {
-      throw error
+        if (error instanceof Error) throw error;
     }
   }, []);
 
@@ -277,6 +276,7 @@ const Reviews: React.FC = () => {
       const token = await getAuthToken();
       if (!token) {
         showAlert('error', 'Error', 'Authentication token not found');
+        setSubmitting(false);
         return;
       }
 
@@ -313,7 +313,7 @@ const Reviews: React.FC = () => {
       }
     } catch (error) {
       showAlert('error', 'Error', 'Failed to submit review');
-      throw error
+      if (error instanceof Error) throw error;
     } finally {
       setSubmitting(false);
     }
@@ -350,7 +350,7 @@ const Reviews: React.FC = () => {
           }
         } catch (error) {
           showAlert('error', 'Error', 'Failed to delete review');
-          throw error
+          if (error instanceof Error) throw error;
         }
       },
       'Delete',
@@ -603,21 +603,15 @@ const useStyles = (colors: any) => StyleSheet.create({
     borderBottomColor: colors.divider,
   },
   backButton: {
-    padding: 8,
+    marginRight: 16,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerPlaceholder: {
-    width: 40,
+    fontSize: 20,
+    fontWeight: '700',
   },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
-    paddingHorizontal: 16,
   },
   tab: {
     flex: 1,
@@ -631,8 +625,9 @@ const useStyles = (colors: any) => StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.textSecondary,
+    textTransform: 'uppercase',
   },
   activeTabText: {
     color: colors.primary,
