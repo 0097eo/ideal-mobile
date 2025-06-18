@@ -214,7 +214,7 @@ const Cart: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                  <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
         {cart.items.length > 0 && (
@@ -311,7 +311,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.text,
   },
   headerTitle: {
-    fontSize: 24,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -363,7 +367,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   emptyCartTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
     marginTop: 24,

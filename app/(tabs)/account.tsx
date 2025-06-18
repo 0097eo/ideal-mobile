@@ -107,7 +107,7 @@ const Account = () => {
       marginTop: 30,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 20,
       fontWeight: 'bold',
       color: colors.navigationText,
     },

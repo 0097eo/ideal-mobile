@@ -310,12 +310,14 @@ const Checkout: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Checkout</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.leftGroup}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Checkout</Text>
+          </View>
         </View>
+
         {renderError()}
       </SafeAreaView>
     );
@@ -396,7 +398,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -404,11 +405,15 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  leftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },

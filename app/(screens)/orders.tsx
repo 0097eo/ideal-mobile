@@ -219,8 +219,8 @@ const Orders = () => {
       flex: 1,
     },
     headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
+      fontSize: 20,
+      fontWeight: 'bold',
       color: colors.navigationText,
     },
     searchButton: {
