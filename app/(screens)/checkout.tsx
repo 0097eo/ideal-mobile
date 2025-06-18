@@ -132,7 +132,6 @@ const Checkout: React.FC = () => {
     const order = await response.json();
     return order;
   } catch (error) {
-    console.error('Order creation failed:', error);
     throw error;
   }
 };

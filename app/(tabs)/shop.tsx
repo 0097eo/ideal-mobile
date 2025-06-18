@@ -177,7 +177,6 @@ const Shop = () => {
       const data: Category[] = await response.json();
       setCategories(data);
     } catch (err) {
-      console.error('Error fetching categories:', err);
       showAlert(
         'error',
         'Error',
@@ -186,6 +185,7 @@ const Shop = () => {
         'OK',
         false
       );
+      throw err
     } finally {
       setCategoriesLoading(false);
     }

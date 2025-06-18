@@ -93,7 +93,6 @@ const ProductDetailsPage: React.FC = () => {
         const productData: Product = await response.json();
         setProduct(productData);
       } catch (err) {
-        console.error('Error fetching product:', err);
         setError(err instanceof Error ? err.message : 'Failed to load product');
       } finally {
         setLoading(false);
@@ -147,7 +146,6 @@ const ProductDetailsPage: React.FC = () => {
           const productData: Product = await response.json();
           setProduct(productData);
         } catch (err) {
-          console.error('Error fetching product:', err);
           setError(err instanceof Error ? err.message : 'Failed to load product');
         } finally {
           setLoading(false);
@@ -219,13 +217,13 @@ const ProductDetailsPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error adding to cart:', error);
       showAlert({
         type: 'error',
         title: 'Error',
         message: "An unexpected error occurred. Please try again.",
         onConfirm: hideAlert,
       });
+      throw error
     } finally {
       setAddingToCart(false);
     }
@@ -263,13 +261,13 @@ const ProductDetailsPage: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error in buy now:', error);
       showAlert({
         type: 'error',
         title: 'Error',
         message: "An unexpected error occurred. Please try again.",
         onConfirm: hideAlert,
       });
+      throw error
     } finally {
       setAddingToCart(false);
     }

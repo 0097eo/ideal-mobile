@@ -86,7 +86,6 @@ const OrderConfirmation: React.FC = () => {
       const orderData = await response.json();
       setOrder(orderData);
     } catch (error) {
-      console.error('Failed to fetch order:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch order details');
     } finally {
       setLoading(false);

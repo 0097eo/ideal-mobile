@@ -186,7 +186,6 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       });
       
     } catch (error) {
-      console.error('Profile update error:', error);
       showAlert({
         type: 'error',
         title: 'Error',
