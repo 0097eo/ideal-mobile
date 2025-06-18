@@ -186,6 +186,7 @@ const Wishlist: React.FC = () => {
       clearError();
     } catch (err) {
       showAlert('error', 'Refresh Failed', 'Failed to refresh wishlist. Please try again.');
+      throw err
     } finally {
       setRefreshing(false);
     }
@@ -204,6 +205,7 @@ const Wishlist: React.FC = () => {
       }
     } catch (err) {
       showAlert('error', 'Error', 'An unexpected error occurred. Please try again.');
+      throw err
     }
   };
 
@@ -228,6 +230,7 @@ const Wishlist: React.FC = () => {
       }
     } catch (err) {
       showAlert('error', 'Error', 'An unexpected error occurred. Please try again.');
+      throw err
     }
   };
 
