@@ -213,7 +213,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       backgroundColor: colors.background,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      marginTop: 30
+      marginTop: 20
     },
     backButton: {
       width: 40,

@@ -342,7 +342,7 @@ const OrderDetails = () => {
       backgroundColor: colors.navigationBackground,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      marginTop: 30,
+      marginTop: 20,
     },
     backButton: {
       width: 40,

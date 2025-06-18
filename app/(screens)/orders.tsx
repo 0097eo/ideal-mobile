@@ -61,7 +61,7 @@ const Orders = () => {
     }
   } catch (error) {
     showAlert('error', 'Error', 'Network error occurred');
-    throw error
+    if (error instanceof Error) throw error;
   } finally {
     setLoading(false);
     setRefreshing(false);
@@ -192,11 +192,11 @@ const Orders = () => {
       alignItems: 'center',
       paddingHorizontal: 20,
       paddingTop: Platform.OS === 'ios' ? 50 : 20,
-      paddingBottom: 16,
+      paddingBottom: 4,
       backgroundColor: colors.navigationBackground,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      marginTop: 30
+      marginTop: 20
     },
     headerContent: {
       flexDirection: 'row',
@@ -269,7 +269,6 @@ const Orders = () => {
     },
     orderHeader: {
       flexDirection: 'row',
-      marginBottom: 12,
     },
     productImage: {
       width: 60,
