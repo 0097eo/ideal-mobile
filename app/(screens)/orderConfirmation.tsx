@@ -12,35 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemes } from '@/hooks/themes';
 import { FullScreenLoader } from '@/components/LoadingSpinner';
-import CustomAlert from '@/components/CustomAlert';
+import CustomAlert from '@/components/CustomAlert'; 
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '@/constants/api';
+import { Order } from '@/types/order';
 
-interface OrderItem {
-  id: number;
-  product_id: number;
-  product_name: string;
-  product_image: string;
-  product_price: string;
-  quantity: number;
-}
-
-interface Order {
-  id: number;
-  status: string;
-  total_price: string;
-  shipping_address: string;
-  billing_address: string;
-  created_at: string;
-  updated_at: string;
-  items: OrderItem[];
-  user: {
-    id: number;
-    username: string;
-    email: string;
-  };
-}
 
 const OrderConfirmation: React.FC = () => {
   const { colors } = useThemes();
