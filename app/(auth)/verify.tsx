@@ -486,6 +486,7 @@ const Verify: React.FC = () => {
               {verificationCode.map((digit, index) => (
                 <TextInput
                   key={index}
+                  testID={`code-input-${index}`} 
                   ref={(ref) => {
                     inputRefs.current[index] = ref;
                   }}
