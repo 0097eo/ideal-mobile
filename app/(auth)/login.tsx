@@ -290,8 +290,6 @@ const LoginPage: React.FC<LoginPageProps> = ({
     },
   });
 
-  const isFormValid = email.trim() && password.trim() && !emailError && !passwordError;
-
   if (authLoading) {
     return <LoadingSpinner message="Loading..." color={colors.primary} />;
   }
@@ -375,6 +373,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
                   style={styles.passwordToggle}
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
+                  testID="password-toggle-button"
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
@@ -390,10 +389,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
             <TouchableOpacity
               style={[
                 styles.loginButton,
-                (!isFormValid || isLoading) && styles.loginButtonDisabled,
+                isLoading && styles.loginButtonDisabled,
               ]}
               onPress={handleLogin}
-              disabled={!isFormValid || isLoading}
+              disabled={isLoading}
             >
               <Text style={styles.loginButtonText}>
                 {isLoading ? 'Signing In...' : 'Sign In'}

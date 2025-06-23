@@ -97,7 +97,7 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   };
 
   return (
-    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose} testID="custom-alert">
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback>
