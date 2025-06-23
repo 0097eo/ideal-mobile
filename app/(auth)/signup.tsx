@@ -404,8 +404,6 @@ const Signup: React.FC = () => {
     },
   });
 
-  const isFormValid = Object.values(formData).every(value => value.trim()) && 
-                     Object.values(errors).every(error => error === '');
 
   return (
     <KeyboardAvoidingView
@@ -581,13 +579,13 @@ const Signup: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.signupButton,
-                (!isFormValid || isLoading) && styles.signupButtonDisabled,
+                isLoading && styles.signupButtonDisabled,
               ]}
               onPress={handleSignup}
-              disabled={!isFormValid || isLoading}
+              disabled={isLoading}
             >
               <Text style={styles.signupButtonText}>
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
           </View>
