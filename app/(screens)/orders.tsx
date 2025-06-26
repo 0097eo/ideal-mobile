@@ -342,8 +342,13 @@ const Orders = () => {
           backgroundColor={colors.navigationBackground} 
         />
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <View style={styles.header} testID='OrdersScreenHeader'>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back" 
+          >
               <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Orders</Text>
