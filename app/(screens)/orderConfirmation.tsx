@@ -265,7 +265,10 @@ const OrderConfirmation: React.FC = () => {
         
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>
+          <Text 
+            style={styles.totalValue}
+            testID="order-total-price"
+          >
             KSh {Math.floor(parseFloat(order.total_price)).toLocaleString()}
           </Text>
         </View>
@@ -352,7 +355,7 @@ const OrderConfirmation: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress} accessibilityLabel="Back">
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Order Confirmation</Text>
