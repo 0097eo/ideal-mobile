@@ -366,6 +366,7 @@ const Reviews: React.FC = () => {
             key={star}
             onPress={() => onPress && onPress(star)}
             disabled={!onPress}
+            testID={`star-rating-${star}`}
           >
             <Ionicons
               name={star <= currentRating ? 'star' : 'star-outline'}
@@ -395,7 +396,7 @@ const Reviews: React.FC = () => {
         <Text style={styles.productPrice}>
           {`KSh ${(Math.round(parseFloat(product.price)) || 0).toLocaleString()}`}
         </Text>
-        <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress}>
+        <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress} testID={`write-review-button-${product.id}`}>
           <Text style={styles.reviewButtonText}>Write Review</Text>
         </TouchableOpacity>
       </View>
@@ -435,6 +436,7 @@ const Reviews: React.FC = () => {
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => deleteReview(review.id)}
+          testID={`delete-review-button-${review.id}`}
         >
           <Ionicons name="trash" size={16} color={colors.error} />
           <Text style={styles.deleteButtonText}>Delete</Text>
