@@ -711,7 +711,7 @@ const OrderDetails = () => {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.sectionTitle}>Addresses</Text>
             {order.status === 'PENDING' && (
-              <TouchableOpacity onPress={openAddressModal}>
+              <TouchableOpacity onPress={openAddressModal} testID="edit-address-button">
                 <Ionicons name="pencil" size={20} color={colors.primary} />
               </TouchableOpacity>
             )}
@@ -758,6 +758,7 @@ const OrderDetails = () => {
               style={[styles.actionButton, styles.cancelButton, styles.flexButton]}
               onPress={handleCancelOrder}
               disabled={cancellingOrder}
+              testID="cancel-order-button"
             >
               {!cancellingOrder && <Ionicons name="close-circle" size={16} color="#FFFFFF" />}
               <Text style={styles.actionButtonText}>
