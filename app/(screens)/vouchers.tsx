@@ -226,7 +226,8 @@ const Vouchers = () => {
           <Ionicons 
             name="arrow-back" 
             size={24} 
-            color={colors.navigationText} 
+            color={colors.navigationText}
+            testID='arrow-back-button' 
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vouchers</Text>
