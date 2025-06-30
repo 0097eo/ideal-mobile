@@ -358,7 +358,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     >
       {/* Header with back button */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack} testID="profile-back-button">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
@@ -473,7 +473,7 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
             disabled={isSaving || !user}
           >
             {isSaving ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color="#ffffff" testID="loading-indicator"/>
             ) : (
               <Text style={styles.saveButtonText}>Save Changes</Text>
             )}
