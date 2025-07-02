@@ -12,9 +12,11 @@ jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
 }));
 
-// FIX: Mocked loaders to render a standard <Text> component.
+
 jest.mock('@/components/LoadingSpinner', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Text } = require('react-native');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   const LoadingSpinner = ({ message }: { message: string }) => <Text>{message}</Text>;
   LoadingSpinner.displayName = 'LoadingSpinner';
@@ -23,9 +25,11 @@ jest.mock('@/components/LoadingSpinner', () => {
   return { LoadingSpinner, FullScreenLoader };
 });
 
-// FIX: Use a more functional mock for CustomAlert that renders buttons.
+
 jest.mock('@/components/CustomAlert', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text, TouchableOpacity } = require('react-native');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   const MockCustomAlert = ({
     visible,
