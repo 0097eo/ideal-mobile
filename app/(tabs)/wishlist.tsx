@@ -286,6 +286,7 @@ const Wishlist: React.FC = () => {
         style={styles.backButton}
         onPress={() => router.back()}
         activeOpacity={0.7}
+        accessibilityRole="button"
       >
         <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
@@ -306,7 +307,7 @@ const Wishlist: React.FC = () => {
         <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
           <Ionicons name="alert-circle" size={20} color={colors.error} />
           <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-          <TouchableOpacity onPress={clearError}>
+          <TouchableOpacity onPress={clearError} testID="clear-error-button">
             <Ionicons name="close" size={20} color={colors.error} />
           </TouchableOpacity>
         </View>
