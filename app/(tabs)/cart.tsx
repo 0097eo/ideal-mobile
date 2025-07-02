@@ -46,6 +46,8 @@ const Cart: React.FC = () => {
     message: '',
     onConfirm: () => {},
     showCancel: false,
+    confirmText: 'OK',
+    cancelText: 'Cancel',
   });
 
   const onRefresh = async () => {
@@ -54,8 +56,8 @@ const Cart: React.FC = () => {
     setRefreshing(false);
   };
 
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
+  const showAlert = (config: Partial<typeof alertConfig>) => {
+    setAlertConfig(prev => ({...prev, ...config}));
     setAlertVisible(true);
   };
 
@@ -101,81 +103,82 @@ const Cart: React.FC = () => {
       title: 'Clear Cart',
       message: 'Are you sure you want to remove all items from your cart?',
       onConfirm: async () => {
-        clearCart();
+        await clearCart();
       },
       showCancel: true,
     });
   };
 
   const renderCartItem = (item: CartItem) => {
-  const isUpdating = updatingItems.has(item.id);
-  const styles = createStyles(colors);
-       
-  return (
-    <View key={item.id} style={styles.cartItem}>
-      <View style={styles.itemHeader}>
-        <Image
-          source={{
-            uri: item.product_image || 'https://via.placeholder.com/80x80?text=No+Image'
-          }}
-          style={styles.productImage}
-          resizeMode="cover"
-        />
+    const isUpdating = updatingItems.has(item.id);
+    const styles = createStyles(colors);
         
-        <View style={styles.itemDetails}>
-          <Text style={styles.productName} numberOfLines={2}>
-            {item.product_name}
-          </Text>
-          <Text style={styles.productPrice}>
-            KSh {Math.floor(parseFloat(item.product_price)).toLocaleString()}
-          </Text>
-          <Text style={styles.quantityText}>
-            Quantity: {item.quantity}
-          </Text>
-          <Text style={styles.subtotal}>
-            Subtotal: KSh {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.itemActions}>
-        <View style={styles.quantityControls}>
-          <TouchableOpacity
-            style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-            onPress={() => handleQuantityUpdate(item.id, item.quantity - 1)}
-            disabled={isUpdating}
-          >
-            <Ionicons name="remove" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-                   
-          <View style={styles.quantityDisplay}>
-            {isUpdating ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text style={styles.quantityText}>{item.quantity}</Text>
-            )}
+    return (
+      <View key={item.id} style={styles.cartItem}>
+        <View style={styles.itemHeader}>
+          <Image
+            source={{
+              uri: item.product_image || 'https://via.placeholder.com/80x80?text=No+Image'
+            }}
+            style={styles.productImage}
+            resizeMode="cover"
+          />
+          
+          <View style={styles.itemDetails}>
+            <Text style={styles.productName} numberOfLines={2}>
+              {item.product_name}
+            </Text>
+            <Text style={styles.productPrice}>
+              KSh {Math.floor(parseFloat(item.product_price)).toLocaleString()}
+            </Text>
+            <Text style={styles.quantityText}>
+              Quantity: {item.quantity}
+            </Text>
+            <Text style={styles.subtotal}>
+              Subtotal: KSh {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
+            </Text>
           </View>
-                   
-          <TouchableOpacity
-            style={[styles.quantityButton, isUpdating && styles.disabledButton]}
-            onPress={() => handleQuantityUpdate(item.id, item.quantity + 1)}
-            disabled={isUpdating}
-          >
-            <Ionicons name="add" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemoveItem(item)}
-          disabled={isUpdating}
-        >
-          <Ionicons name="trash-outline" size={20} color={colors.error} />
-        </TouchableOpacity>
+        <View style={styles.itemActions}>
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+              onPress={() => handleQuantityUpdate(item.id, item.quantity - 1)}
+              disabled={isUpdating}
+            >
+              <Ionicons name="remove" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+                    
+            <View style={styles.quantityDisplay}>
+              {isUpdating ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Text style={styles.quantityText}>{item.quantity}</Text>
+              )}
+            </View>
+                    
+            <TouchableOpacity
+              style={[styles.quantityButton, isUpdating && styles.disabledButton]}
+              onPress={() => handleQuantityUpdate(item.id, item.quantity + 1)}
+              disabled={isUpdating}
+            >
+              <Ionicons name="add" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => handleRemoveItem(item)}
+            disabled={isUpdating}
+            accessibilityLabel={`Remove ${item.product_name}`}
+          >
+            <Ionicons name="trash-outline" size={20} color={colors.error} />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
   const renderEmptyCart = () => {
     const styles = createStyles(colors);
@@ -213,7 +216,7 @@ const Cart: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} testID="back-button">
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
@@ -258,8 +261,8 @@ const Cart: React.FC = () => {
               </Text>
             </View>
             
-            <TouchableOpacity style={styles.checkoutButton}>
-              <Text style={styles.checkoutButtonText} onPress={() => router.push('/(screens)/checkout')}>
+            <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push('/(screens)/checkout')}>
+              <Text style={styles.checkoutButtonText}>
                 Proceed to Checkout
               </Text>
             </TouchableOpacity>
@@ -284,8 +287,8 @@ const Cart: React.FC = () => {
           hideAlert();
         }}
         showCancel={alertConfig.showCancel}
-        confirmText="OK"
-        cancelText="Cancel"
+        confirmText={alertConfig.confirmText}
+        cancelText={alertConfig.cancelText}
       />
     </SafeAreaView>
   );
@@ -308,7 +311,8 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    color: colors.text,
+    // The zIndex ensures the back button is pressable and not covered by the centered title
+    zIndex: 1,
   },
   headerTitle: {
     position: 'absolute',
@@ -322,6 +326,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   clearButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    zIndex: 1,
   },
   clearButtonText: {
     color: colors.error,
