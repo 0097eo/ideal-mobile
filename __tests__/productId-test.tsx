@@ -60,6 +60,7 @@ beforeEach(() => {
   (useCart as jest.Mock).mockReturnValue({ addToCart: jest.fn().mockResolvedValue({ success: true }), loading: false, error: null, clearError: jest.fn() });
 });
 
+jest.useFakeTimers();
 
 describe('ProductDetailsPage', () => {
   it('shows loading state initially', () => {
@@ -77,8 +78,14 @@ describe('ProductDetailsPage', () => {
   it('renders product details after successful fetch', async () => {
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => mockProduct });
     const { findByText, getByText } = render(<ProductDetailsPage />);
+    
     expect(await findByText('Test Product')).toBeTruthy();
+    act(() => {
+        jest.runAllTimers();
+    });
+
     expect(getByText('Living Room')).toBeTruthy();
+    expect(getByText('Excellent!')).toBeTruthy();
   });
 
   it('calls router.back when back button is pressed', async () => {
