@@ -17,13 +17,8 @@ import { useThemes } from '@/hooks/themes';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import CustomAlert from '@/components/CustomAlert';
 
-interface LoginPageProps {
-  onNavigateToForgotPassword?: () => void;
-}
 
-const LoginPage: React.FC<LoginPageProps> = ({
-  onNavigateToForgotPassword,
-}) => {
+const LoginPage: React.FC = () => {
   const { login, isLoading: authLoading } = useAuth();
   const { colors } = useThemes();
   const router = useRouter();
@@ -140,6 +135,11 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const handleSignupClick = () => {
     router.push('/signup');
   };
+
+
+  const handleForgotPasswordClick = () => {
+    router.push('/forgotPassword');
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -402,7 +402,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
             {/* Forgot Password */}
             <TouchableOpacity
               style={styles.forgotPasswordContainer}
-              onPress={onNavigateToForgotPassword}
+              onPress={handleForgotPasswordClick}
               disabled={isLoading}
             >
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>

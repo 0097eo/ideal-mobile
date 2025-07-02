@@ -176,13 +176,12 @@ describe('LoginPage Component', () => {
   });
 
   test('calls onNavigateToForgotPassword when "Forgot Password?" is pressed', () => {
-    const mockNavigate = jest.fn();
-    render(<LoginPage onNavigateToForgotPassword={mockNavigate} />);
+    render(<LoginPage />);
     
-    const forgotPasswordLink = screen.getByText('Forgot Password?');
-    fireEvent.press(forgotPasswordLink);
+    const forgotLink = screen.getByText('Forgot Password?');
+    fireEvent.press(forgotLink);
     
-    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockRouterPush).toHaveBeenCalledWith('/forgotPassword');
   });
   
   test('toggles password visibility', () => {
