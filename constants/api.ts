@@ -1,7 +1,7 @@
 
 const getApiUrl = () => {
   if (__DEV__) {
-    const HOST_IP = '192.168.0.102';
+    const HOST_IP = '192.168.0.107';
     const PORT = '8000';
     
     return `http://${HOST_IP}:${PORT}/`;
