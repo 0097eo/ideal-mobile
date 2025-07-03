@@ -271,7 +271,7 @@ const Index = () => {
       alignItems: 'center',
     },
     heroTitle: {
-      fontSize: 32,
+      fontSize: 26,
       fontWeight: 'bold',
       color: colors.surface,
       textAlign: 'center',
@@ -293,7 +293,7 @@ const Index = () => {
       backgroundColor: colors.surface,
     },
     sectionTitle: {
-      fontSize: 28,
+      fontSize: 20,
       fontWeight: 'bold',
       color: colors.text,
       textAlign: 'center',
