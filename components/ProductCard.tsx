@@ -29,7 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const handleWishlistToggle = (e: any) => {
-    e.preventDefault(); // Prevent the link navigation when wishlist button is pressed
+    e.preventDefault();
     e.stopPropagation();
     
     if (isInWishlist(product.id)) {
@@ -75,7 +75,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         position: "relative",
         height: 200,
         backgroundColor: colors.surface,
-        marginBottom: 0,
       },
       productImage: {
         width: "100%",
@@ -131,16 +130,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
       content: {
         paddingHorizontal: 16,
         paddingBottom: 16,
-        flex: 1,
-        marginTop: 0,
-        paddingTop: 0,
+        paddingTop: 12, // Changed from 0 to give it some space from the top
       },
       categoryText: {
         fontSize: 12,
         color: colors.textTertiary,
         fontWeight: "500",
         marginBottom: 4,
-        marginTop: 12,
         textTransform: "uppercase",
       },
       productName: {
@@ -148,7 +144,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         fontWeight: "700",
         color: colors.text,
         marginBottom: 8,
-        lineHeight: 20,
+        // FIX 1: Set a fixed height for the product name container.
+        // This reserves space for one line of text, ensuring all cards
+        // maintain the same height even if the product name is short.
+        height: 20,
       },
       priceRow: {
         flexDirection: "row",
@@ -171,9 +170,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
         color: colors.surface,
         fontSize: 16,
         fontWeight: "700",
-      },
-      linkContainer: {
-        flex: 1,
       },
     })
   );
@@ -235,7 +231,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <Text style={styles.categoryText}>{product.category_name}</Text>
           )}
 
-          <Text style={styles.productName} numberOfLines={2}>
+          {/* FIX 2: Use numberOfLines={1} to force single-line display */}
+          <Text style={styles.productName} numberOfLines={1}>
             {product.name}
           </Text>
 
