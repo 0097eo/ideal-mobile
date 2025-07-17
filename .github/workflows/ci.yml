@@ -1,4 +1,6 @@
+
 name: Expo React Native CI
+
 
 on:
   push:
@@ -9,45 +11,26 @@ on:
 
 jobs:
 
-  setup:
+  test:
 
     runs-on: ubuntu-latest
 
+
     steps:
 
-      - name: Checkout repository
+      - name: ⬇️ Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+
+      - name: 🏗️ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm install
 
-      - name: Upload dependencies
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules
 
-  test:
-
-    needs: setup
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download dependencies
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-
-      - name: Run tests
-        run: npx test
+      - name: 🧪 Run tests
+        run: npm test
