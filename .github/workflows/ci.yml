@@ -50,4 +50,4 @@ jobs:
           name: node-modules
 
       - name: Run tests
-        run: npm test
+        run: npx test
