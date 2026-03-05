@@ -58,12 +58,12 @@ interface AlertState {
 const Index = () => {
   const { colors, createStyles } = useThemes();
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   // Product states
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState<boolean>(true);
   const [productsError, setProductsError] = useState<string | null>(null);
-  
+
   // Other states
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -78,6 +78,12 @@ const Index = () => {
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 200],
     outputRange: [1, 0.8],
+    extrapolate: 'clamp',
+  });
+
+  const heroScale = scrollY.interpolate({
+    inputRange: [-100, 0, 200],
+    outputRange: [1.08, 1, 0.96],
     extrapolate: 'clamp',
   });
 
@@ -163,13 +169,13 @@ const Index = () => {
     },
   ];
 
-  // Fetch trending products 
+  // Fetch trending products
   const fetchTrendingProducts = useCallback(async () => {
     try {
       setProductsLoading(true);
       setProductsError(null);
       const params = new URLSearchParams({
-        ordering: '-created_at', // Most recent first
+        ordering: '-created_at',
         limit: '8',
         is_available: 'true',
       });
@@ -189,12 +195,11 @@ const Index = () => {
 
       const data: ProductResponse = await response.json();
       setTrendingProducts(data.results);
-      
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch trending products';
       setProductsError(errorMessage);
-      
-      // Show error alert
+
       showAlert(
         'error',
         'Failed to Load Products',
@@ -210,21 +215,21 @@ const Index = () => {
 
   // Alert functions
   const showAlert = (
-    type: AlertState['type'], 
-    title: string, 
+    type: AlertState['type'],
+    title: string,
     message: string,
     onConfirm?: () => void,
     confirmText?: string,
     showCancel?: boolean
   ) => {
-    setAlert({ 
-      visible: true, 
-      type, 
-      title, 
-      message, 
+    setAlert({
+      visible: true,
+      type,
+      title,
+      message,
       onConfirm,
       confirmText,
-      showCancel 
+      showCancel
     });
   };
 
@@ -239,8 +244,7 @@ const Index = () => {
     }
 
     setLoading(true);
-    
-    // Simulate API call
+
     setTimeout(() => {
       setLoading(false);
       setEmail('');
@@ -261,281 +265,406 @@ const Index = () => {
     scrollView: {
       flex: 1,
     },
-    
-    // Header Section
+
+    // ── Hero Section ──────────────────────────────────────────────
     headerSection: {
+      height: 340,
+      overflow: 'hidden',
+    },
+    heroImageBg: {
+      ...StyleSheet.absoluteFillObject,
+      width: '100%',
+      height: '100%',
+    },
+    heroOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(20, 15, 10, 0.52)',
+    },
+    heroContent: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      paddingHorizontal: 28,
+      paddingBottom: 36,
       paddingTop: 60,
-      paddingHorizontal: 20,
-      paddingBottom: 0,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
+    },
+    heroEyebrow: {
+      fontSize: 11,
+      letterSpacing: 3.5,
+      color: '#D4A96A',
+      textTransform: 'uppercase',
+      marginBottom: 10,
+      fontWeight: '600',
     },
     heroTitle: {
-      fontSize: 26,
-      fontWeight: 'bold',
-      color: colors.surface,
-      textAlign: 'center',
-      marginBottom: 16,
+      fontSize: 38,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      marginBottom: 10,
+      letterSpacing: -0.5,
+      lineHeight: 44,
     },
     heroSubtitle: {
-      fontSize: 18,
-      color: colors.surface,
-      textAlign: 'center',
-      marginBottom: 32,
-      opacity: 0.9,
-      lineHeight: 26,
+      fontSize: 16,
+      color: 'rgba(255,255,255,0.82)',
+      marginBottom: 28,
+      lineHeight: 24,
+      fontStyle: 'italic',
     },
-  
+    heroCtaRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    heroCta: {
+      backgroundColor: '#D4A96A',
+      paddingHorizontal: 22,
+      paddingVertical: 13,
+      borderRadius: 8,
+    },
+    heroCtaText: {
+      color: '#1A1208',
+      fontWeight: '700',
+      fontSize: 14,
+      letterSpacing: 0.3,
+    },
+    heroCtaSecondary: {
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.6)',
+      paddingHorizontal: 22,
+      paddingVertical: 13,
+      borderRadius: 8,
+    },
+    heroCtaSecondaryText: {
+      color: '#FFFFFF',
+      fontWeight: '600',
+      fontSize: 14,
+    },
 
-    // Trending Products Section
-    trendingSection: {
-      padding: 20,
-      backgroundColor: colors.surface,
+    // ── Section shared ────────────────────────────────────────────
+    sectionHeader: {
+      marginBottom: 24,
+    },
+    sectionEyebrow: {
+      fontSize: 10,
+      letterSpacing: 3,
+      color: '#D4A96A',
+      textTransform: 'uppercase',
+      fontWeight: '700',
+      marginBottom: 6,
+      textAlign: 'center',
     },
     sectionTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '800',
       color: colors.text,
       textAlign: 'center',
-      marginBottom: 12,
+      letterSpacing: -0.3,
     },
     sectionSubtitle: {
-      fontSize: 16,
+      fontSize: 14,
       color: colors.textSecondary,
       textAlign: 'center',
-      marginBottom: 24,
-      lineHeight: 24,
+      marginTop: 6,
+      lineHeight: 22,
     },
-    
-    // Categories Section
-    categoriesSection: {
-      padding: 20,
+
+    // ── Trending Products ─────────────────────────────────────────
+    trendingSection: {
+      paddingVertical: 32,
+      paddingHorizontal: 20,
       backgroundColor: colors.background,
+    },
+    productsList: {
+      paddingHorizontal: 4,
+    },
+
+    // ── Categories ────────────────────────────────────────────────
+    categoriesSection: {
+      paddingVertical: 32,
+      paddingHorizontal: 20,
+      backgroundColor: colors.surface,
     },
     categoriesGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      gap: 14,
     },
     categoryCard: {
-      width: (screenWidth - 60) / 2,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      marginBottom: 16,
-      shadowColor: colors.text,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      width: (screenWidth - 54) / 2,
+      borderRadius: 14,
       overflow: 'hidden',
+      height: 140,
+      backgroundColor: colors.card,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 5,
     },
     categoryImage: {
+      ...StyleSheet.absoluteFillObject,
       width: '100%',
-      height: 100,
+      height: '100%',
+    },
+    categoryGradient: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(10, 8, 5, 0.48)',
     },
     categoryInfo: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
       padding: 12,
-      margin: 4
     },
     categoryName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 4,
+      fontSize: 15,
+      fontWeight: '700',
+      color: '#FFFFFF',
+      marginBottom: 2,
     },
     categoryDescription: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      lineHeight: 16,
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.75)',
+      lineHeight: 14,
     },
-    
-    // Features Section
+
+    // ── Features ──────────────────────────────────────────────────
     featuresSection: {
-      padding: 20,
-      backgroundColor: colors.surface,
+      paddingVertical: 32,
+      paddingHorizontal: 20,
+      backgroundColor: colors.background,
     },
     featuresGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      gap: 14,
     },
     featureCard: {
-      width: (screenWidth - 60) / 2,
-      backgroundColor: colors.card,
+      width: (screenWidth - 54) / 2,
+      backgroundColor: colors.surface,
       padding: 20,
-      borderRadius: 12,
-      marginBottom: 16,
-      shadowColor: colors.text,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      borderRadius: 14,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.07,
+      shadowRadius: 6,
       elevation: 3,
+    },
+    featureIconWrapper: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: 'rgba(212, 169, 106, 0.12)',
       alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 14,
     },
     featureIcon: {
       fontSize: 32,
-      marginBottom: 12,
     },
     featureTitle: {
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 14,
+      fontWeight: '700',
       color: colors.text,
-      marginBottom: 8,
-      textAlign: 'center',
+      marginBottom: 6,
+      lineHeight: 18,
     },
     featureDescription: {
       fontSize: 12,
       color: colors.textSecondary,
       lineHeight: 18,
-      textAlign: 'center',
     },
-    
-    // Testimonials Section
+
+    // ── Testimonials ──────────────────────────────────────────────
     testimonialsSection: {
-      padding: 20,
-      backgroundColor: colors.background,
+      paddingVertical: 32,
+      backgroundColor: colors.surface,
+    },
+    testimonialsHeader: {
+      paddingHorizontal: 20,
+      marginBottom: 24,
     },
     testimonialCard: {
-      backgroundColor: colors.surface,
-      padding: 20,
-      borderRadius: 12,
+      backgroundColor: colors.background,
+      padding: 22,
+      borderRadius: 16,
       marginRight: 16,
       width: screenWidth - 80,
-      shadowColor: colors.text,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: colors.divider ?? 'rgba(0,0,0,0.05)',
     },
-    testimonialHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    testimonialImage: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      marginRight: 12,
-    },
-    testimonialName: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    testimonialRole: {
-      fontSize: 14,
-      color: colors.textSecondary,
-    },
-    starsContainer: {
-      flexDirection: 'row',
-      marginBottom: 12,
-    },
-    star: {
-      fontSize: 16,
-      color: '#FFD700',
-      marginRight: 2,
+    quoteMark: {
+      fontSize: 52,
+      lineHeight: 44,
+      color: '#D4A96A',
+      fontWeight: '900',
+      marginBottom: 8,
+      opacity: 0.7,
     },
     testimonialComment: {
       fontSize: 14,
       color: colors.text,
-      lineHeight: 20,
+      lineHeight: 22,
       fontStyle: 'italic',
+      marginBottom: 18,
     },
-    
-    // Newsletter Section
-    newsletterSection: {
-      padding: 20,
-      backgroundColor: colors.primary,
+    testimonialDivider: {
+      height: 1,
+      backgroundColor: colors.divider ?? 'rgba(0,0,0,0.06)',
+      marginBottom: 16,
+    },
+    testimonialHeader: {
+      flexDirection: 'row',
       alignItems: 'center',
     },
+    testimonialImage: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      marginRight: 12,
+      borderWidth: 2,
+      borderColor: '#D4A96A',
+    },
+    testimonialName: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 1,
+    },
+    testimonialRole: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    starsContainer: {
+      flexDirection: 'row',
+      marginTop: 4,
+    },
+    star: {
+      fontSize: 12,
+      color: '#D4A96A',
+      marginRight: 1,
+    },
+
+    // ── Newsletter ────────────────────────────────────────────────
+    newsletterSection: {
+      paddingVertical: 40,
+      paddingHorizontal: 24,
+      backgroundColor: '#1A1208',
+      alignItems: 'center',
+    },
+    newsletterBadge: {
+      backgroundColor: 'rgba(212, 169, 106, 0.15)',
+      borderWidth: 1,
+      borderColor: 'rgba(212, 169, 106, 0.3)',
+      borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 5,
+      marginBottom: 16,
+    },
+    newsletterBadgeText: {
+      fontSize: 11,
+      color: '#D4A96A',
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      fontWeight: '600',
+    },
     newsletterTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: colors.surface,
+      fontSize: 26,
+      fontWeight: '800',
+      color: '#FFFFFF',
       textAlign: 'center',
       marginBottom: 8,
+      letterSpacing: -0.3,
     },
     newsletterSubtitle: {
-      fontSize: 16,
-      color: colors.surface,
+      fontSize: 14,
+      color: 'rgba(255,255,255,0.6)',
       textAlign: 'center',
-      marginBottom: 24,
-      opacity: 0.9,
+      marginBottom: 28,
+      lineHeight: 22,
     },
     emailInputContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.surface,
-      borderRadius: 25,
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderRadius: 12,
       paddingHorizontal: 16,
-      marginBottom: 16,
+      marginBottom: 12,
       width: '100%',
-      maxWidth: 350,
+      maxWidth: 360,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
     },
     emailInput: {
       flex: 1,
-      height: 50,
-      fontSize: 16,
-      color: colors.text,
+      height: 52,
+      fontSize: 15,
+      color: '#FFFFFF',
     },
     subscribeButton: {
-      backgroundColor:colors.primary,
+      backgroundColor: '#D4A96A',
       paddingHorizontal: 20,
-      paddingVertical: 12,
-      borderRadius: 20,
+      paddingVertical: 11,
+      borderRadius: 9,
       marginLeft: 8,
     },
     subscribeButtonText: {
-      color: colors.surface,
-      fontWeight: '600',
+      color: '#1A1208',
+      fontWeight: '700',
+      fontSize: 13,
     },
 
-    // Loading and Error States
+    // ── Loading / Error ───────────────────────────────────────────
     loadingContainer: {
-      padding: 40,
+      padding: 48,
       alignItems: 'center',
     },
     loadingText: {
-      fontSize: 16,
+      fontSize: 14,
       color: colors.textSecondary,
       marginTop: 16,
     },
     errorContainer: {
-      padding: 20,
+      padding: 24,
       alignItems: 'center',
     },
     errorText: {
-      fontSize: 16,
+      fontSize: 14,
       color: colors.error,
       textAlign: 'center',
       marginBottom: 16,
+      lineHeight: 22,
     },
     retryButton: {
       backgroundColor: colors.primary,
-      paddingHorizontal: 20,
+      paddingHorizontal: 24,
       paddingVertical: 12,
       borderRadius: 8,
     },
     retryButtonText: {
       color: colors.surface,
       fontWeight: '600',
+      fontSize: 14,
     },
     viewAllButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      paddingHorizontal: 28,
+      paddingVertical: 13,
+      borderRadius: 10,
       alignSelf: 'center',
-      marginTop: 16,
+      marginTop: 20,
     },
     viewAllButtonText: {
-      color: colors.surface,
-      fontWeight: '600',
-      fontSize: 16,
-    },
-    productsList: {
-      paddingHorizontal: 10,
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 14,
+      letterSpacing: 0.2,
     },
   }));
 
@@ -548,27 +677,29 @@ const Index = () => {
 
   const renderTestimonial = ({ item }: { item: Testimonial }) => (
     <View style={styles.testimonialCard}>
+      <Text style={styles.quoteMark}>"</Text>
+      <Text style={styles.testimonialComment}>{item.comment}</Text>
+      <View style={styles.testimonialDivider} />
       <View style={styles.testimonialHeader}>
         <Image source={{ uri: item.image }} style={styles.testimonialImage} />
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.testimonialName}>{item.name}</Text>
           <Text style={styles.testimonialRole}>{item.role}</Text>
+          <View style={styles.starsContainer}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <Text key={`star-${item.id}-${i}`} style={styles.star}>
+                {i < item.rating ? '★' : '☆'}
+              </Text>
+            ))}
+          </View>
         </View>
       </View>
-      <View style={styles.starsContainer}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <Text key={`star-${item.id}-${i}`} style={styles.star}>
-            {i < item.rating ? '★' : '☆'}
-          </Text>
-        ))}
-      </View>
-      <Text style={styles.testimonialComment}>&quot;{item.comment}&quot;</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Animated.ScrollView 
+      <Animated.ScrollView
         style={styles.scrollView}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -578,37 +709,52 @@ const Index = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.headerSection,
-            { opacity: headerOpacity },
+            { opacity: headerOpacity, transform: [{ scale: heroScale }] },
           ]}
         >
-          <Text style={styles.heroTitle}>
-            Ideal Furniture
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            &quot;Comfort in style&quot;
-          </Text>
+          <Image
+            source={{ uri: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop' }}
+            style={styles.heroImageBg}
+            resizeMode="cover"
+          />
+          <View style={styles.heroOverlay} />
+          <View style={styles.heroContent}>
+            <Text style={styles.heroEyebrow}>Premium Furniture</Text>
+            <Text style={styles.heroTitle}>Ideal Furniture</Text>
+            <Text style={styles.heroSubtitle}>&quot;Comfort in style&quot;</Text>
+            <View style={styles.heroCtaRow}>
+              <TouchableOpacity style={styles.heroCta} onPress={() => router.push('/shop')}>
+                <Text style={styles.heroCtaText}>Shop Now</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.heroCtaSecondary} onPress={() => router.push('/shop')}>
+                <Text style={styles.heroCtaSecondaryText}>Explore</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </Animated.View>
 
         {/* Trending Products Section */}
         <View style={styles.trendingSection}>
-          <Text style={styles.sectionTitle}>Trending Products</Text>
-          
-          
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>Curated for You</Text>
+            <Text style={styles.sectionTitle}>Trending Products</Text>
+          </View>
+
           {productsLoading ? (
             <View style={styles.loadingContainer}>
-              <FullScreenLoader 
-                message="Loading trending products..." 
+              <FullScreenLoader
+                message="Loading trending products..."
                 color={colors.primary}
               />
             </View>
           ) : productsError ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{productsError}</Text>
-              <TouchableOpacity 
-                style={styles.retryButton} 
+              <TouchableOpacity
+                style={styles.retryButton}
                 onPress={fetchTrendingProducts}
               >
                 <Text style={styles.retryButtonText}>Retry</Text>
@@ -624,7 +770,7 @@ const Index = () => {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.productsList}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.viewAllButton}
                 onPress={() => router.push('/shop')}
               >
@@ -636,16 +782,23 @@ const Index = () => {
 
         {/* Categories Section */}
         <View style={styles.categoriesSection}>
-          <Text style={styles.sectionTitle}>Shop by Category</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>Browse</Text>
+            <Text style={styles.sectionTitle}>Shop by Category</Text>
+          </View>
           <View style={styles.categoriesGrid}>
             {categories.map((category) => (
               <TouchableOpacity key={category.id} style={styles.categoryCard}>
-                <Image 
-                  source={{ uri: category.image }} 
-                  style={{ width: '100%', height: 80, borderRadius: 12, marginBottom: 8 }}
+                <Image
+                  source={{ uri: category.image }}
+                  style={styles.categoryImage}
+                  resizeMode="cover"
                 />
-                <Text style={styles.categoryName}>{category.name}</Text>
-                <Text style={styles.categoryDescription}>{category.desription}</Text>
+                <View style={styles.categoryGradient} />
+                <View style={styles.categoryInfo}>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                  <Text style={styles.categoryDescription}>{category.desription}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -653,14 +806,19 @@ const Index = () => {
 
         {/* Features Section */}
         <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>Why Choose Us?</Text>
-          <Text style={styles.sectionSubtitle}>
-            We make furniture shopping easy with these exclusive benefits
-          </Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionEyebrow}>Our Promise</Text>
+            <Text style={styles.sectionTitle}>Why Choose Us?</Text>
+            <Text style={styles.sectionSubtitle}>
+              We make furniture shopping easy with these exclusive benefits
+            </Text>
+          </View>
           <View style={styles.featuresGrid}>
             {features.map((feature) => (
               <View key={feature.id} style={styles.featureCard}>
-                <Ionicons name={feature.icon} size={32} color="#FFA000" style={styles.featureIcon} />
+                <View style={styles.featureIconWrapper}>
+                  <Ionicons name={feature.icon} size={24} color="#D4A96A" />
+                </View>
                 <Text style={styles.featureTitle}>{feature.title}</Text>
                 <Text style={styles.featureDescription}>{feature.description}</Text>
               </View>
@@ -670,10 +828,13 @@ const Index = () => {
 
         {/* Testimonials Section */}
         <View style={styles.testimonialsSection}>
-          <Text style={styles.sectionTitle}>Happy Customers</Text>
-          <Text style={styles.sectionSubtitle}>
-            See what our customers say about their furniture experience
-          </Text>
+          <View style={[styles.sectionHeader, styles.testimonialsHeader]}>
+            <Text style={styles.sectionEyebrow}>Reviews</Text>
+            <Text style={styles.sectionTitle}>Happy Customers</Text>
+            <Text style={styles.sectionSubtitle}>
+              See what our customers say about their furniture experience
+            </Text>
+          </View>
           <FlatList
             data={testimonials}
             renderItem={renderTestimonial}
@@ -686,6 +847,9 @@ const Index = () => {
 
         {/* Newsletter Section */}
         <View style={styles.newsletterSection}>
+          <View style={styles.newsletterBadge}>
+            <Text style={styles.newsletterBadgeText}>Exclusive Offers</Text>
+          </View>
           <Text style={styles.newsletterTitle}>Stay Updated</Text>
           <Text style={styles.newsletterSubtitle}>
             Get exclusive deals, new arrivals, and design tips delivered to your inbox
@@ -694,13 +858,13 @@ const Index = () => {
             <TextInput
               style={styles.emailInput}
               placeholder="Enter your email"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="rgba(255,255,255,0.35)"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.subscribeButton}
               onPress={handleNewsletterSignup}
               disabled={loading}
