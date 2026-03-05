@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "ideal-mobile",
+    "name": "Ideal Furniture & Decor",
     "slug": "ideal-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.jpeg",
     "scheme": "idealmobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,11 +13,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.jpeg",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.okeloe.idealmobile"
+      "package": "com.okeloe.idealmobile",
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",
@@ -29,13 +30,21 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/logo.jpeg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
