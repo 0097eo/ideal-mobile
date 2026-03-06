@@ -10,14 +10,15 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-import { useThemes } from '@/hooks/themes';
+import { useThemes, AppColors } from '@/hooks/themes';
 import { API_URL } from '@/constants/api';
 import CustomAlert from '@/components/CustomAlert';
 import { useRouter } from 'expo-router';
 
-
+// ─── Interfaces ─────────────────────────────────────────────────────────────
 interface ProfileFormData {
   first_name: string;
   last_name: string;
@@ -36,14 +37,15 @@ interface ProfileErrors {
 }
 
 interface ProfileProps {
-  navigation?: any; // Add navigation prop
+  navigation?: any;
 }
 
+// ─── Component ───────────────────────────────────────────────────────────────
 const Profile: React.FC<ProfileProps> = ({ navigation }) => {
-  const router = useRouter()
+  const router = useRouter();
   const { user, token } = useAuth();
-  const { colors, createStyles } = useThemes();
-  
+  const { colors } = useThemes();
+
   const [formData, setFormData] = useState<ProfileFormData>({
     first_name: '',
     last_name: '',
@@ -51,12 +53,12 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     phone_number: '',
     user_type: '',
   });
-  
+
   const [errors, setErrors] = useState<ProfileErrors>({});
-  const [ isLoading ] = useState(false);
+  const [isLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  // Alert states
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     type: 'success' as 'success' | 'error' | 'warning' | 'info',
@@ -68,7 +70,8 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     cancelText: 'Cancel',
   });
 
-  // Initialize form with user data
+  const styles = makeStyles(colors);
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -86,32 +89,25 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
     setAlertVisible(true);
   };
 
-  const hideAlert = () => {
-    setAlertVisible(false);
-  };
+  const hideAlert = () => setAlertVisible(false);
 
-  const handleBack = () => {
-    router.back()
-  };
+  const handleBack = () => router.back();
 
   const validateForm = (): boolean => {
     const newErrors: ProfileErrors = {};
 
-    // First name validation
     if (!formData.first_name.trim()) {
       newErrors.first_name = 'First name is required';
     } else if (formData.first_name.trim().length < 2) {
       newErrors.first_name = 'First name must be at least 2 characters';
     }
 
-    // Last name validation
     if (!formData.last_name.trim()) {
       newErrors.last_name = 'Last name is required';
     } else if (formData.last_name.trim().length < 2) {
       newErrors.last_name = 'Last name must be at least 2 characters';
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
@@ -119,7 +115,6 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Phone number validation (optional but if provided, should be valid)
     if (formData.phone_number && formData.phone_number.trim()) {
       const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
       if (!phoneRegex.test(formData.phone_number.trim())) {
@@ -133,17 +128,11 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
 
   const handleInputChange = (field: keyof ProfileFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
   const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSaving(true);
     setErrors({});
@@ -162,14 +151,9 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
 
       if (!response.ok) {
         if (response.status === 400) {
-          // Handle validation errors from backend
           const backendErrors: ProfileErrors = {};
           Object.keys(data).forEach(key => {
-            if (Array.isArray(data[key])) {
-              backendErrors[key as keyof ProfileErrors] = data[key][0];
-            } else {
-              backendErrors[key as keyof ProfileErrors] = data[key];
-            }
+            backendErrors[key as keyof ProfileErrors] = Array.isArray(data[key]) ? data[key][0] : data[key];
           });
           setErrors(backendErrors);
         } else {
@@ -178,311 +162,239 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         return;
       }
 
-      showAlert({
-        type: 'success',
-        title: 'Success',
-        message: 'Profile updated successfully!',
-        onConfirm: hideAlert
-      });
-      
+      showAlert({ type: 'success', title: 'Success', message: 'Profile updated successfully!', onConfirm: hideAlert });
     } catch (error) {
       showAlert({
         type: 'error',
         title: 'Error',
         message: error instanceof Error ? error.message : 'An unexpected error occurred',
-        onConfirm: hideAlert
+        onConfirm: hideAlert,
       });
     } finally {
       setIsSaving(false);
     }
   };
 
-  
-
-  const styles = createStyles((colors) => StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingTop: Platform.OS === 'ios' ? 50 : 20,
-      paddingBottom: 16,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      marginTop: 20
-    },
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.background,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 16,
-    },
-    headerTitleContainer: {
-      flex: 1,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    headerSubtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    scrollContainer: {
-      flexGrow: 1,
-      padding: 20,
-    },
-    section: {
-      marginBottom: 24,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 16,
-    },
-    inputContainer: {
-      marginBottom: 16,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: colors.text,
-      marginBottom: 6,
-    },
-    input: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      color: colors.text,
-      backgroundColor: colors.surface,
-    },
-    inputError: {
-      borderColor: colors.error,
-    },
-    errorText: {
-      color: colors.error,
-      fontSize: 12,
-      marginTop: 4,
-    },
-    generalError: {
-      backgroundColor: colors.error + '20',
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    generalErrorText: {
-      color: colors.error,
-      fontSize: 14,
-      textAlign: 'center',
-    },
-    readOnlyContainer: {
-      backgroundColor: colors.border,
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 16,
-    },
-    readOnlyLabel: {
-      fontSize: 12,
-      color: colors.textTertiary,
-      marginBottom: 4,
-    },
-    readOnlyText: {
-      fontSize: 16,
-      color: colors.textSecondary,
-    },
-    verificationBadge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.success + '20',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      alignSelf: 'flex-start',
-    },
-    verificationText: {
-      color: colors.success,
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    buttonContainer: {
-      marginTop: 20,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-      padding: 16,
-      borderRadius: 8,
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    saveButtonDisabled: {
-      opacity: 0.6,
-    },
-    saveButtonText: {
-      color: '#ffffff',
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-  }));
-
+  // ── Loading state ───────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.headerSubtitle, { marginTop: 16 }]}>Loading profile...</Text>
+        <View style={styles.loadingRing}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+        <Text style={styles.loadingText}>Loading profile…</Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
+    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Header with back button */}
+      {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack} testID="profile-back-button">
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerEyebrow}>IDEAL FURNITURE</Text>
           <Text style={styles.headerTitle}>Profile</Text>
-          <Text style={styles.headerSubtitle}>Manage your account information</Text>
         </View>
+        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── General error ── */}
         {errors.general && (
           <View style={styles.generalError}>
+            <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
             <Text style={styles.generalErrorText}>{errors.general}</Text>
           </View>
         )}
 
+        {/* ── Personal Information ── */}
         <View style={styles.section}>
+          <View style={styles.sectionAccentLine} />
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="person-outline" size={14} color={colors.primary} />
+            <Text style={styles.sectionEyebrow}>Personal Information</Text>
+          </View>
           <Text style={styles.sectionTitle}>Personal Information</Text>
-          
+
+          {/* First Name */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={[styles.input, errors.first_name && styles.inputError]}
-              value={formData.first_name}
-              onChangeText={(value) => handleInputChange('first_name', value)}
-              placeholder="Enter your first name"
-              placeholderTextColor={colors.textTertiary}
-            />
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'first_name' && styles.inputWrapperFocused,
+              errors.first_name && styles.inputWrapperError,
+            ]}>
+              <Ionicons name="person-outline" size={16} color={focusedField === 'first_name' ? colors.primary : colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={formData.first_name}
+                onChangeText={(value) => handleInputChange('first_name', value)}
+                placeholder="Enter your first name"
+                placeholderTextColor={colors.textTertiary}
+                onFocus={() => setFocusedField('first_name')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
             {errors.first_name && (
-              <Text style={styles.errorText}>{errors.first_name}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={[styles.input, errors.last_name && styles.inputError]}
-              value={formData.last_name}
-              onChangeText={(value) => handleInputChange('last_name', value)}
-              placeholder="Enter your last name"
-              placeholderTextColor={colors.textTertiary}
-            />
-            {errors.last_name && (
-              <Text style={styles.errorText}>{errors.last_name}</Text>
-            )}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              value={formData.email}
-              onChangeText={(value) => handleInputChange('email', value)}
-              placeholder="Enter your email address"
-              placeholderTextColor={colors.textTertiary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            )}
-            {user?.is_verified && (
-              <View style={[styles.verificationBadge, { marginTop: 8 }]}>
-                <Text style={styles.verificationText}>✓ Verified</Text>
+              <View style={styles.errorRow}>
+                <Ionicons name="alert-circle-outline" size={12} color={colors.error} />
+                <Text style={styles.errorText}>{errors.first_name}</Text>
               </View>
             )}
           </View>
 
+          {/* Last Name */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Phone Number (Optional)</Text>
-            <TextInput
-              style={[styles.input, errors.phone_number && styles.inputError]}
-              value={formData.phone_number}
-              onChangeText={(value) => handleInputChange('phone_number', value)}
-              placeholder="Enter your phone number"
-              placeholderTextColor={colors.textTertiary}
-              keyboardType="phone-pad"
-            />
+            <Text style={styles.label}>Last Name</Text>
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'last_name' && styles.inputWrapperFocused,
+              errors.last_name && styles.inputWrapperError,
+            ]}>
+              <Ionicons name="person-outline" size={16} color={focusedField === 'last_name' ? colors.primary : colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={formData.last_name}
+                onChangeText={(value) => handleInputChange('last_name', value)}
+                placeholder="Enter your last name"
+                placeholderTextColor={colors.textTertiary}
+                onFocus={() => setFocusedField('last_name')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+            {errors.last_name && (
+              <View style={styles.errorRow}>
+                <Ionicons name="alert-circle-outline" size={12} color={colors.error} />
+                <Text style={styles.errorText}>{errors.last_name}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Email */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email Address</Text>
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'email' && styles.inputWrapperFocused,
+              errors.email && styles.inputWrapperError,
+            ]}>
+              <Ionicons name="mail-outline" size={16} color={focusedField === 'email' ? colors.primary : colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(value) => handleInputChange('email', value)}
+                placeholder="Enter your email address"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
+            {errors.email && (
+              <View style={styles.errorRow}>
+                <Ionicons name="alert-circle-outline" size={12} color={colors.error} />
+                <Text style={styles.errorText}>{errors.email}</Text>
+              </View>
+            )}
+            {user?.is_verified && (
+              <View style={styles.verificationBadge}>
+                <Ionicons name="checkmark-circle" size={13} color={colors.success} />
+                <Text style={styles.verificationText}>Verified</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Phone */}
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Phone Number <Text style={styles.optionalLabel}>(Optional)</Text></Text>
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'phone_number' && styles.inputWrapperFocused,
+              errors.phone_number && styles.inputWrapperError,
+            ]}>
+              <Ionicons name="call-outline" size={16} color={focusedField === 'phone_number' ? colors.primary : colors.textTertiary} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                value={formData.phone_number}
+                onChangeText={(value) => handleInputChange('phone_number', value)}
+                placeholder="Enter your phone number"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="phone-pad"
+                onFocus={() => setFocusedField('phone_number')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
             {errors.phone_number && (
-              <Text style={styles.errorText}>{errors.phone_number}</Text>
+              <View style={styles.errorRow}>
+                <Ionicons name="alert-circle-outline" size={12} color={colors.error} />
+                <Text style={styles.errorText}>{errors.phone_number}</Text>
+              </View>
             )}
           </View>
         </View>
 
+        {/* ── Account Information ── */}
         <View style={styles.section}>
+          <View style={styles.sectionAccentLine} />
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="shield-outline" size={14} color={colors.primary} />
+            <Text style={styles.sectionEyebrow}>Account Information</Text>
+          </View>
           <Text style={styles.sectionTitle}>Account Information</Text>
-          
-          <View style={styles.readOnlyContainer}>
-            <Text style={styles.readOnlyLabel}>User Type</Text>
-            <Text style={styles.readOnlyText}>
-              {formData.user_type || 'Not specified'}
-            </Text>
+
+          <View style={styles.readOnlyCard}>
+            <View style={styles.readOnlyIconBadge}>
+              <Ionicons name="id-card-outline" size={16} color={colors.primary} />
+            </View>
+            <View style={styles.readOnlyTextGroup}>
+              <Text style={styles.readOnlyLabel}>User Type</Text>
+              <Text style={styles.readOnlyText}>{formData.user_type || 'Not specified'}</Text>
+            </View>
           </View>
 
-          <View style={styles.readOnlyContainer}>
-            <Text style={styles.readOnlyLabel}>Account Status</Text>
-            <Text style={styles.readOnlyText}>
-              {user?.is_verified ? 'Verified' : 'Pending Verification'}
-            </Text>
+          <View style={styles.readOnlyCard}>
+            <View style={styles.readOnlyIconBadge}>
+              <Ionicons name="shield-checkmark-outline" size={16} color={user?.is_verified ? colors.success : colors.primary} />
+            </View>
+            <View style={styles.readOnlyTextGroup}>
+              <Text style={styles.readOnlyLabel}>Account Status</Text>
+              <Text style={[styles.readOnlyText, { color: user?.is_verified ? colors.success : colors.textSecondary }]}>
+                {user?.is_verified ? 'Active & Verified' : 'Pending Verification'}
+              </Text>
+            </View>
           </View>
         </View>
 
+        {/* ── Save Button ── */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[
-              styles.saveButton,
-              (isSaving || !user) && styles.saveButtonDisabled
-            ]}
+            style={[styles.saveButton, (isSaving || !user) && styles.saveButtonDisabled]}
             onPress={handleSave}
             disabled={isSaving || !user}
           >
             {isSaving ? (
-              <ActivityIndicator color="#ffffff" testID="loading-indicator"/>
+              <ActivityIndicator color={colors.primaryText} testID="loading-indicator" />
             ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
+              <>
+                <Ionicons name="checkmark-outline" size={18} color={colors.primaryText} />
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              </>
             )}
           </TouchableOpacity>
-
         </View>
       </ScrollView>
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertVisible}
         type={alertConfig.type}
@@ -495,7 +407,290 @@ const Profile: React.FC<ProfileProps> = ({ navigation }) => {
         cancelText={alertConfig.cancelText}
       />
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
+
+// ─── Dynamic Styles ──────────────────────────────────────────────────────────
+const makeStyles = (colors: AppColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+
+    // ── Loading ─────────────────────────────────────────────────────────────
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 20,
+    },
+    loadingRing: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      borderWidth: 1,
+      borderColor: colors.primaryBorder,
+      backgroundColor: colors.primaryDim,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      letterSpacing: 0.5,
+    },
+
+    // ── Header ─────────────────────────────────────────────────────────────
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingTop: Platform.OS === 'ios' ? 54 : 24,
+      paddingBottom: 14,
+      backgroundColor: colors.stickyBackground,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.primaryBorder,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerCenter: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    headerEyebrow: {
+      fontSize: 9,
+      letterSpacing: 3,
+      textTransform: 'uppercase',
+      color: colors.primary,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      letterSpacing: 0.3,
+    },
+    headerSpacer: { width: 40 },
+
+    // ── Scroll ─────────────────────────────────────────────────────────────
+    scrollContainer: {
+      padding: 16,
+      paddingBottom: 40,
+      gap: 0,
+    },
+
+    // ── General error ───────────────────────────────────────────────────────
+    generalError: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: `${colors.error}12`,
+      borderWidth: 1,
+      borderColor: `${colors.error}40`,
+      padding: 12,
+      borderRadius: 10,
+      marginBottom: 16,
+    },
+    generalErrorText: {
+      color: colors.error,
+      fontSize: 14,
+      flex: 1,
+    },
+
+    // ── Section card ────────────────────────────────────────────────────────
+    section: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      paddingHorizontal: 18,
+      paddingBottom: 20,
+      marginBottom: 16,
+    },
+    sectionAccentLine: {
+      height: 2,
+      backgroundColor: colors.primary,
+      opacity: 0.55,
+      marginBottom: 16,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 4,
+    },
+    sectionEyebrow: {
+      fontSize: 11,
+      letterSpacing: 2.5,
+      textTransform: 'uppercase',
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 18,
+      letterSpacing: 0.2,
+    },
+
+    // ── Input ───────────────────────────────────────────────────────────────
+    inputContainer: {
+      marginBottom: 16,
+    },
+    label: {
+      fontSize: 12,
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+      color: colors.textSecondary,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    optionalLabel: {
+      fontSize: 11,
+      color: colors.textTertiary,
+      textTransform: 'none',
+      letterSpacing: 0,
+      fontWeight: '400',
+    },
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      height: 50,
+    },
+    inputWrapperFocused: {
+      borderColor: colors.primaryBorder,
+      backgroundColor: colors.primaryDim,
+    },
+    inputWrapperError: {
+      borderColor: `${colors.error}40`,
+      backgroundColor: `${colors.error}12`,
+    },
+    inputIcon: {
+      marginRight: 10,
+    },
+    input: {
+      flex: 1,
+      fontSize: 15,
+      color: colors.text,
+      letterSpacing: 0.2,
+    },
+    errorRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 6,
+    },
+    errorText: {
+      color: colors.error,
+      fontSize: 12,
+      letterSpacing: 0.2,
+    },
+    verificationBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: `${colors.success}14`,
+      borderWidth: 1,
+      borderColor: `${colors.success}4D`,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 20,
+      alignSelf: 'flex-start',
+      marginTop: 8,
+    },
+    verificationText: {
+      color: colors.success,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+
+    // ── Read-only cards ─────────────────────────────────────────────────────
+    readOnlyCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 10,
+    },
+    readOnlyIconBadge: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: colors.primaryDim,
+      borderWidth: 1,
+      borderColor: colors.primaryBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    readOnlyTextGroup: {
+      flex: 1,
+    },
+    readOnlyLabel: {
+      fontSize: 10,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      color: colors.textTertiary,
+      fontWeight: '600',
+      marginBottom: 3,
+    },
+    readOnlyText: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+
+    // ── Save button ─────────────────────────────────────────────────────────
+    buttonContainer: {
+      marginTop: 8,
+      marginBottom: 20,
+    },
+    saveButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      padding: 16,
+      borderRadius: 12,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.30,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    saveButtonDisabled: {
+      opacity: 0.45,
+    },
+    saveButtonText: {
+      color: colors.primaryText,
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: 0.4,
+    },
+  });
 
 export default Profile;
