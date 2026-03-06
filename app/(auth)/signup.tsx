@@ -9,10 +9,10 @@ import {
   Platform,
   ScrollView,
   Animated,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useThemes } from '@/hooks/themes';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import CustomAlert from '@/components/CustomAlert';
 import { API_URL } from '@/constants/api';
@@ -25,54 +25,33 @@ interface SignupData {
 }
 
 const Signup: React.FC = () => {
-  const { colors } = useThemes();
   const router = useRouter();
-  
-  // Form state
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    firstName: '', lastName: '', email: '', password: '', confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Alert state
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     type: 'error' as 'success' | 'error' | 'warning' | 'info',
     title: '',
     message: '',
   });
-  
-  // Form validation state
+
   const [errors, setErrors] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    firstName: '', lastName: '', email: '', password: '', confirmPassword: ''
   });
-  
-  // Animation
+
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const slideAnim = useState(new Animated.Value(50))[0];
+  const slideAnim = useState(new Animated.Value(40))[0];
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
     ]).start();
   }, [fadeAnim, slideAnim]);
 
@@ -82,51 +61,36 @@ const Signup: React.FC = () => {
         if (!value.trim()) return 'First name is required';
         if (value.trim().length < 2) return 'First name must be at least 2 characters';
         return '';
-      
       case 'lastName':
         if (!value.trim()) return 'Last name is required';
         if (value.trim().length < 2) return 'Last name must be at least 2 characters';
         return '';
-      
       case 'email':
         if (!value.trim()) return 'Email is required';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) return 'Please enter a valid email address';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address';
         return '';
-      
       case 'password':
         if (!value.trim()) return 'Password is required';
         if (value.length < 6) return 'Password must be at least 6 characters';
         return '';
-      
       case 'confirmPassword':
         if (!value.trim()) return 'Please confirm your password';
         if (value !== formData.password) return 'Passwords do not match';
         return '';
-      
-      default:
-        return '';
+      default: return '';
     }
   };
 
   const handleInputChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when user starts typing
-    if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-    
-    // Validate confirm password when password changes
+    if (errors[name as keyof typeof errors]) setErrors(prev => ({ ...prev, [name]: '' }));
     if (name === 'password' && formData.confirmPassword) {
-      const confirmPasswordError = value !== formData.confirmPassword ? 'Passwords do not match' : '';
-      setErrors(prev => ({ ...prev, confirmPassword: confirmPasswordError }));
+      setErrors(prev => ({ ...prev, confirmPassword: value !== formData.confirmPassword ? 'Passwords do not match' : '' }));
     }
   };
 
   const handleBlur = (name: string, value: string) => {
-    const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const validateForm = (): boolean => {
@@ -135,36 +99,25 @@ const Signup: React.FC = () => {
       lastName: validateField('lastName', formData.lastName),
       email: validateField('email', formData.email),
       password: validateField('password', formData.password),
-      confirmPassword: validateField('confirmPassword', formData.confirmPassword)
+      confirmPassword: validateField('confirmPassword', formData.confirmPassword),
     };
-    
     setErrors(newErrors);
-    return Object.values(newErrors).every(error => error === '');
+    return Object.values(newErrors).every(e => e === '');
   };
 
   const signupUser = async (userData: SignupData) => {
     const response = await fetch(`${API_URL}/accounts/signup/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
-
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || data.detail || 'Signup failed');
-    }
-
+    if (!response.ok) throw new Error(data.message || data.detail || 'Signup failed');
     return data;
   };
 
   const handleSignup = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
     try {
       const signupData: SignupData = {
@@ -173,321 +126,182 @@ const Signup: React.FC = () => {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       };
-
       const response = await signupUser(signupData);
-      
-      // Show success alert
-      setAlertConfig({
-        type: 'success',
-        title: 'Account Created!',
-        message: response.message || 'Registration successful. Please check your email for verification.',
-      });
+      setAlertConfig({ type: 'success', title: 'Account Created!', message: response.message || 'Registration successful. Please check your email for verification.' });
       setAlertVisible(true);
-      
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      });
-      
-      // Navigate to email verification after a short delay
+      setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
       setTimeout(() => {
         setAlertVisible(false);
         router.push(`/(auth)/verify?email=${encodeURIComponent(signupData.email)}`);
       }, 2000);
-
     } catch (error: any) {
       let errorMessage = 'An unexpected error occurred. Please try again.';
-      
       if (error.message) {
-        if (error.message.includes('already exists') || 
-            error.message.includes('duplicate')) {
+        if (error.message.includes('already exists') || error.message.includes('duplicate')) {
           errorMessage = 'An account with this email already exists. Please use a different email or try logging in.';
-        } else if (error.message.includes('Network') || 
-                   error.message.includes('Failed to fetch')) {
+        } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
           errorMessage = 'Network error. Please check your internet connection and try again.';
-        } else if (error.message.includes('validation') || 
-                   error.message.includes('invalid')) {
-          errorMessage = 'Please check your information and try again.';
         } else {
           errorMessage = error.message;
         }
       }
-      
-      setAlertConfig({
-        type: 'error',
-        title: 'Signup Failed',
-        message: errorMessage,
-      });
+      setAlertConfig({ type: 'error', title: 'Signup Failed', message: errorMessage });
       setAlertVisible(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLoginClick = () => {
-    router.push('/login');
+  const handleLoginClick = () => router.push('/login');
+
+  const getStrengthColor = () => {
+    const len = formData.password.length;
+    if (len === 0) return 'rgba(255,255,255,0.2)';
+    if (len < 6) return '#FF6B6B';
+    if (len < 8) return '#F59E0B';
+    return '#10B981';
   };
 
-  const getPasswordStrengthColor = () => {
-    const password = formData.password;
-    if (password.length === 0) return colors.textTertiary;
-    if (password.length < 6) return colors.error;
-    if (password.length < 8) return '#FFA500'; // Orange
-    return '#10B981'; // Green
-  };
-
-  const getPasswordStrengthText = () => {
-    const password = formData.password;
-    if (password.length === 0) return '';
-    if (password.length < 6) return 'Weak';
-    if (password.length < 8) return 'Medium';
+  const getStrengthText = () => {
+    const len = formData.password.length;
+    if (len === 0) return '';
+    if (len < 6) return 'Weak';
+    if (len < 8) return 'Medium';
     return 'Strong';
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
+    container: { flex: 1, backgroundColor: '#0F0C08' },
+    bgImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.18 },
+    scrollContainer: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 28, paddingVertical: 48 },
+    // ── Header ──
+    badge: {
+      alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6,
+      backgroundColor: 'rgba(212,169,106,0.12)', borderWidth: 1,
+      borderColor: 'rgba(212,169,106,0.3)', borderRadius: 20,
+      paddingHorizontal: 14, paddingVertical: 6, marginBottom: 28,
     },
-    scrollContainer: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      paddingHorizontal: 24,
-      paddingVertical: 40,
+    badgeText: { fontSize: 11, color: '#D4A96A', letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
+    iconWrapper: {
+      alignSelf: 'center', width: 72, height: 72, borderRadius: 20,
+      backgroundColor: 'rgba(212,169,106,0.15)', borderWidth: 1.5,
+      borderColor: 'rgba(212,169,106,0.4)', justifyContent: 'center',
+      alignItems: 'center', marginBottom: 22,
     },
-    logoContainer: {
-      alignItems: 'center',
-      marginBottom: 48,
-    },
-    logoIcon: {
-      width: 80,
-      height: 80,
-      borderRadius: 20,
-      backgroundColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 16,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.text,
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-    formContainer: {
-      marginBottom: 32,
-    },
-    nameRow: {
-      flexDirection: 'row',
-      gap: 12,
-      marginBottom: 20,
-    },
-    nameInputContainer: {
-      flex: 1,
-    },
-    inputContainer: {
-      marginBottom: 20,
-    },
-    inputLabel: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 8,
-    },
-    inputWrapper: {
-      position: 'relative',
-    },
+    headingBlock: { alignItems: 'center', marginBottom: 36 },
+    title: { fontSize: 30, fontWeight: '800', color: '#FFFFFF', textAlign: 'center', marginBottom: 8, letterSpacing: -0.4 },
+    subtitle: { fontSize: 15, color: 'rgba(255,255,255,0.5)', textAlign: 'center' },
+    // ── Form ──
+    formContainer: { marginBottom: 24 },
+    nameRow: { flexDirection: 'row', gap: 12, marginBottom: 18 },
+    nameInputContainer: { flex: 1 },
+    inputContainer: { marginBottom: 18 },
+    inputLabel: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)', marginBottom: 8, letterSpacing: 0.4 },
+    inputWrapper: { position: 'relative' },
     input: {
-      backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
-      color: colors.text,
-      paddingRight: 50,
+      backgroundColor: 'rgba(255,255,255,0.07)', borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)', borderRadius: 12,
+      paddingHorizontal: 16, paddingVertical: 15, fontSize: 15, color: '#FFFFFF', paddingRight: 52,
     },
-    inputError: {
-      borderColor: colors.error,
-      borderWidth: 2,
-    },
-    inputFocused: {
-      borderColor: colors.primary,
-      borderWidth: 2,
-    },
-    passwordToggle: {
-      position: 'absolute',
-      right: 16,
-      top: 14,
-      padding: 4,
-    },
-    errorText: {
-      color: colors.error,
-      fontSize: 14,
-      marginTop: 4,
-      marginLeft: 4,
-    },
-    passwordStrengthContainer: {
-      marginTop: 8,
-      marginLeft: 4,
-    },
-    passwordStrengthText: {
-      fontSize: 12,
-      fontWeight: '500',
-    },
+    inputError: { borderColor: '#FF6B6B', borderWidth: 1.5, backgroundColor: 'rgba(255,107,107,0.06)' },
+    passwordToggle: { position: 'absolute', right: 14, top: 14, padding: 4 },
+    errorText: { color: '#FF8F8F', fontSize: 12, marginTop: 5, marginLeft: 2 },
+    // ── Password strength ──
+    strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginLeft: 2 },
+    strengthBar: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)' },
+    strengthFill: { height: '100%', borderRadius: 2 },
+    strengthText: { fontSize: 11, fontWeight: '600' },
+    // ── CTA ──
     signupButton: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      paddingVertical: 16,
-      alignItems: 'center',
-      marginBottom: 24,
-      shadowColor: colors.primary,
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
+      backgroundColor: '#D4A96A', borderRadius: 12, paddingVertical: 16,
+      alignItems: 'center', marginTop: 8, marginBottom: 20,
+      shadowColor: '#D4A96A', shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
     },
-    signupButtonDisabled: {
-      backgroundColor: colors.textTertiary,
-      shadowOpacity: 0,
-      elevation: 0,
-    },
-    signupButtonText: {
-      color: '#FFFFFF',
-      fontSize: 18,
-      fontWeight: '600',
-    },
-    dividerContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 32,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: colors.divider,
-    },
-    dividerText: {
-      marginHorizontal: 16,
-      color: colors.textSecondary,
-      fontSize: 14,
-      fontWeight: '500',
-    },
-    loginContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loginText: {
-      color: colors.textSecondary,
-      fontSize: 16,
-    },
-    loginLink: {
-      color: colors.primary,
-      fontSize: 16,
-      fontWeight: '600',
-      marginLeft: 4,
-    },
+    signupButtonDisabled: { backgroundColor: 'rgba(212,169,106,0.35)', shadowOpacity: 0, elevation: 0 },
+    signupButtonText: { color: '#1A1208', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+    // ── Divider ──
+    dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+    dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
+    dividerText: { marginHorizontal: 14, color: 'rgba(255,255,255,0.35)', fontSize: 13, fontWeight: '500' },
+    // ── Login link ──
+    loginContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 },
+    loginText: { color: 'rgba(255,255,255,0.45)', fontSize: 14 },
+    loginLink: { color: '#D4A96A', fontSize: 14, fontWeight: '700' },
   });
 
+  const strengthWidth = formData.password.length === 0 ? '0%'
+    : formData.password.length < 6 ? '33%'
+    : formData.password.length < 8 ? '66%' : '100%';
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
-        >
-          {/* Logo and Title */}
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="person-add" size={40} color="#FFFFFF" />
-            </View>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <Image
+        source={{ uri: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=1200&fit=crop' }}
+        style={styles.bgImage}
+        resizeMode="cover"
+      />
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+
+          <View style={styles.badge}>
+            <Ionicons name="person-add-outline" size={12} color="#D4A96A" />
+            <Text style={styles.badgeText}>New Account</Text>
+          </View>
+
+          <View style={styles.iconWrapper}>
+            <Ionicons name="person-add" size={32} color="#D4A96A" />
+          </View>
+
+          <View style={styles.headingBlock}>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join us and get started today</Text>
           </View>
 
-          {/* Signup Form */}
           <View style={styles.formContainer}>
-            {/* Name Fields */}
+            {/* Name row */}
             <View style={styles.nameRow}>
               <View style={styles.nameInputContainer}>
                 <Text style={styles.inputLabel}>First Name</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      errors.firstName && styles.inputError,
-                    ]}
-                    placeholder="John"
-                    placeholderTextColor={colors.textTertiary}
-                    value={formData.firstName}
-                    onChangeText={(text) => handleInputChange('firstName', text)}
-                    onBlur={() => handleBlur('firstName', formData.firstName)}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    editable={!isLoading}
-                  />
-                </View>
+                <TextInput
+                  style={[styles.input, errors.firstName ? styles.inputError : null]}
+                  placeholder="John"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  value={formData.firstName}
+                  onChangeText={(text) => handleInputChange('firstName', text)}
+                  onBlur={() => handleBlur('firstName', formData.firstName)}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
                 {errors.firstName ? <Text style={styles.errorText}>{errors.firstName}</Text> : null}
               </View>
 
               <View style={styles.nameInputContainer}>
                 <Text style={styles.inputLabel}>Last Name</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      errors.lastName && styles.inputError,
-                    ]}
-                    placeholder="Doe"
-                    placeholderTextColor={colors.textTertiary}
-                    value={formData.lastName}
-                    onChangeText={(text) => handleInputChange('lastName', text)}
-                    onBlur={() => handleBlur('lastName', formData.lastName)}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    editable={!isLoading}
-                  />
-                </View>
+                <TextInput
+                  style={[styles.input, errors.lastName ? styles.inputError : null]}
+                  placeholder="Doe"
+                  placeholderTextColor="rgba(255,255,255,0.25)"
+                  value={formData.lastName}
+                  onChangeText={(text) => handleInputChange('lastName', text)}
+                  onBlur={() => handleBlur('lastName', formData.lastName)}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
                 {errors.lastName ? <Text style={styles.errorText}>{errors.lastName}</Text> : null}
               </View>
             </View>
 
-            {/* Email Input */}
+            {/* Email */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Email</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[
-                    styles.input,
-                    errors.email && styles.inputError,
-                  ]}
+                  style={[styles.input, errors.email ? styles.inputError : null]}
                   placeholder="john.doe@example.com"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   value={formData.email}
                   onChangeText={(text) => handleInputChange('email', text)}
                   onBlur={() => handleBlur('email', formData.email)}
@@ -500,17 +314,14 @@ const Signup: React.FC = () => {
               {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
             </View>
 
-            {/* Password Input */}
+            {/* Password */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Password</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[
-                    styles.input,
-                    errors.password && styles.inputError,
-                  ]}
+                  style={[styles.input, errors.password ? styles.inputError : null]}
                   placeholder="Enter your password"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   value={formData.password}
                   onChangeText={(text) => handleInputChange('password', text)}
                   onBlur={() => handleBlur('password', formData.password)}
@@ -519,39 +330,31 @@ const Signup: React.FC = () => {
                   autoCorrect={false}
                   editable={!isLoading}
                 />
-                <TouchableOpacity
-                  style={styles.passwordToggle}
-                  onPress={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={24}
-                    color={colors.textSecondary}
-                  />
+                <TouchableOpacity style={styles.passwordToggle} onPress={() => setShowPassword(!showPassword)} disabled={isLoading}>
+                  <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="rgba(255,255,255,0.4)" />
                 </TouchableOpacity>
               </View>
               {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
               {formData.password && !errors.password && (
-                <View style={styles.passwordStrengthContainer}>
-                  <Text style={[styles.passwordStrengthText, { color: getPasswordStrengthColor() }]}>
-                    Password Strength: {getPasswordStrengthText()}
+                <View style={styles.strengthRow}>
+                  <View style={styles.strengthBar}>
+                    <View style={[styles.strengthFill, { width: strengthWidth as any, backgroundColor: getStrengthColor() }]} />
+                  </View>
+                  <Text style={[styles.strengthText, { color: getStrengthColor() }]}>
+                    Password Strength: {getStrengthText()}
                   </Text>
                 </View>
               )}
             </View>
 
-            {/* Confirm Password Input */}
+            {/* Confirm Password */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Confirm Password</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[
-                    styles.input,
-                    errors.confirmPassword && styles.inputError,
-                  ]}
+                  style={[styles.input, errors.confirmPassword ? styles.inputError : null]}
                   placeholder="Confirm your password"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   value={formData.confirmPassword}
                   onChangeText={(text) => handleInputChange('confirmPassword', text)}
                   onBlur={() => handleBlur('confirmPassword', formData.confirmPassword)}
@@ -560,70 +363,40 @@ const Signup: React.FC = () => {
                   autoCorrect={false}
                   editable={!isLoading}
                 />
-                <TouchableOpacity
-                  style={styles.passwordToggle}
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading}
-                >
-                  <Ionicons
-                    name={showConfirmPassword ? 'eye-off' : 'eye'}
-                    size={24}
-                    color={colors.textSecondary}
-                  />
+                <TouchableOpacity style={styles.passwordToggle} onPress={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isLoading}>
+                  <Ionicons name={showConfirmPassword ? 'eye-off' : 'eye'} size={22} color="rgba(255,255,255,0.4)" />
                 </TouchableOpacity>
               </View>
               {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
             </View>
 
-            {/* Signup Button */}
             <TouchableOpacity
-              style={[
-                styles.signupButton,
-                isLoading && styles.signupButtonDisabled,
-              ]}
+              style={[styles.signupButton, isLoading && styles.signupButtonDisabled]}
               onPress={handleSignup}
               disabled={isLoading}
             >
-              <Text style={styles.signupButtonText}>
-                {isLoading ? 'Creating Account...' : 'Sign Up'}
-              </Text>
+              <Text style={styles.signupButtonText}>{isLoading ? 'Creating Account...' : 'Sign Up'}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Divider */}
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>OR</Text>
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Login Link */}
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Already have an account?</Text>
-            <TouchableOpacity
-              onPress={handleLoginClick}
-              disabled={isLoading}
-            >
+            <TouchableOpacity onPress={handleLoginClick} disabled={isLoading}>
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
+
         </Animated.View>
       </ScrollView>
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <LoadingSpinner message="Creating your account..." color={colors.primary} />
-      )}
-
-      {/* Custom Alert */}
-      <CustomAlert
-        visible={alertVisible}
-        type={alertConfig.type}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        onClose={() => setAlertVisible(false)}
-        confirmText="OK"
-      />
+      {isLoading && <LoadingSpinner message="Creating your account..." color="#D4A96A" />}
+      <CustomAlert visible={alertVisible} type={alertConfig.type} title={alertConfig.title} message={alertConfig.message} onClose={() => setAlertVisible(false)} confirmText="OK" />
     </KeyboardAvoidingView>
   );
 };

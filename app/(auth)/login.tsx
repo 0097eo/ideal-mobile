@@ -9,80 +9,55 @@ import {
   Platform,
   ScrollView,
   Animated,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { useThemes } from '@/hooks/themes';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import CustomAlert from '@/components/CustomAlert';
 
-
 const LoginPage: React.FC = () => {
   const { login, isLoading: authLoading } = useAuth();
-  const { colors } = useThemes();
+
   const router = useRouter();
-  
-  // Form state
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Alert state
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     type: 'error' as 'success' | 'error' | 'warning' | 'info',
     title: '',
     message: '',
   });
-  
-  // Form validation state
+
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
-  // Animation
+
   const fadeAnim = useState(new Animated.Value(0))[0];
-  const slideAnim = useState(new Animated.Value(50))[0];
+  const slideAnim = useState(new Animated.Value(40))[0];
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
     ]).start();
   }, [fadeAnim, slideAnim]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      setEmailError('Email is required');
-      return false;
-    }
-    if (!emailRegex.test(email)) {
-      setEmailError('Please enter a valid email address');
-      return false;
-    }
+    if (!email.trim()) { setEmailError('Email is required'); return false; }
+    if (!emailRegex.test(email)) { setEmailError('Please enter a valid email address'); return false; }
     setEmailError('');
     return true;
   };
 
   const validatePassword = (password: string): boolean => {
-    if (!password.trim()) {
-      setPasswordError('Password is required');
-      return false;
-    }
-    if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return false;
-    }
+    if (!password.trim()) { setPasswordError('Password is required'); return false; }
+    if (password.length < 6) { setPasswordError('Password must be at least 6 characters'); return false; }
     setPasswordError('');
     return true;
   };
@@ -90,29 +65,17 @@ const LoginPage: React.FC = () => {
   const handleLogin = async () => {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
-
-    if (!isEmailValid || !isPasswordValid) {
-      return;
-    }
+    if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
     try {
       await login(email.trim(), password);
-      
-      // Show success alert
-      setAlertConfig({
-        type: 'success',
-        title: 'Welcome Back!',
-        message: 'You have successfully logged in.',
-      });
+      setAlertConfig({ type: 'success', title: 'Welcome Back!', message: 'You have successfully logged in.' });
       setAlertVisible(true);
     } catch (error: any) {
-      
       let errorMessage = 'An unexpected error occurred. Please try again.';
-      
       if (error.message) {
-        if (error.message.includes('Invalid credentials') || 
-            error.message.includes('Login failed')) {
+        if (error.message.includes('Invalid credentials') || error.message.includes('Login failed')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
         } else if (error.message.includes('Network')) {
           errorMessage = 'Network error. Please check your internet connection and try again.';
@@ -120,223 +83,221 @@ const LoginPage: React.FC = () => {
           errorMessage = error.message;
         }
       }
-      
-      setAlertConfig({
-        type: 'error',
-        title: 'Login Failed',
-        message: errorMessage,
-      });
+      setAlertConfig({ type: 'error', title: 'Login Failed', message: errorMessage });
       setAlertVisible(true);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignupClick = () => {
-    router.push('/signup');
-  };
-
-
-  const handleForgotPasswordClick = () => {
-    router.push('/forgotPassword');
-  }
+  const handleSignupClick = () => router.push('/signup');
+  const handleForgotPasswordClick = () => router.push('/forgotPassword');
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: '#0F0C08',
+    },
+    bgImage: {
+      ...StyleSheet.absoluteFillObject,
+      width: '100%',
+      height: '100%',
+      opacity: 0.18,
     },
     scrollContainer: {
       flexGrow: 1,
       justifyContent: 'center',
-      paddingHorizontal: 24,
-      paddingVertical: 40,
+      paddingHorizontal: 28,
+      paddingVertical: 48,
     },
-    logoContainer: {
+    // ── Brand block ──
+    brandBlock: {
       alignItems: 'center',
-      marginBottom: 48,
+      marginBottom: 40,
     },
-    logoIcon: {
-      width: 80,
-      height: 80,
+    logoRing: {
+      width: 72,
+      height: 72,
       borderRadius: 20,
-      backgroundColor: colors.primary,
+      backgroundColor: 'rgba(212, 169, 106, 0.15)',
+      borderWidth: 1.5,
+      borderColor: 'rgba(212, 169, 106, 0.4)',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: 22,
+    },
+    eyebrow: {
+      fontSize: 11,
+      letterSpacing: 3,
+      color: '#D4A96A',
+      textTransform: 'uppercase',
+      fontWeight: '600',
+      marginBottom: 8,
     },
     title: {
-      fontSize: 28,
-      fontWeight: '700',
-      color: colors.text,
+      fontSize: 30,
+      fontWeight: '800',
+      color: '#FFFFFF',
       textAlign: 'center',
       marginBottom: 8,
+      letterSpacing: -0.4,
     },
     subtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
+      fontSize: 15,
+      color: 'rgba(255,255,255,0.5)',
       textAlign: 'center',
     },
+    // ── Form ──
     formContainer: {
-      marginBottom: 32,
+      marginBottom: 24,
     },
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: 18,
     },
     inputLabel: {
-      fontSize: 16,
+      fontSize: 13,
       fontWeight: '600',
-      color: colors.text,
+      color: 'rgba(255,255,255,0.7)',
       marginBottom: 8,
+      letterSpacing: 0.4,
     },
     inputWrapper: {
       position: 'relative',
     },
     input: {
-      backgroundColor: colors.surface,
+      backgroundColor: 'rgba(255,255,255,0.07)',
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: 'rgba(255,255,255,0.12)',
       borderRadius: 12,
       paddingHorizontal: 16,
-      paddingVertical: 14,
-      fontSize: 16,
-      color: colors.text,
-      paddingRight: 50,
+      paddingVertical: 15,
+      fontSize: 15,
+      color: '#FFFFFF',
+      paddingRight: 52,
     },
     inputError: {
-      borderColor: colors.error,
-      borderWidth: 2,
-    },
-    inputFocused: {
-      borderColor: colors.primary,
-      borderWidth: 2,
+      borderColor: '#FF6B6B',
+      borderWidth: 1.5,
+      backgroundColor: 'rgba(255,107,107,0.06)',
     },
     passwordToggle: {
       position: 'absolute',
-      right: 16,
+      right: 14,
       top: 14,
       padding: 4,
     },
     errorText: {
-      color: colors.error,
-      fontSize: 14,
-      marginTop: 4,
-      marginLeft: 4,
+      color: '#FF8F8F',
+      fontSize: 13,
+      marginTop: 6,
+      marginLeft: 2,
     },
+    // ── Login button ──
     loginButton: {
-      backgroundColor: colors.primary,
+      backgroundColor: '#D4A96A',
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
-      marginBottom: 24,
-      shadowColor: colors.primary,
-      shadowOffset: {
-        width: 0,
-        height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
+      marginTop: 8,
+      marginBottom: 18,
+      shadowColor: '#D4A96A',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
       elevation: 8,
     },
     loginButtonDisabled: {
-      backgroundColor: colors.textTertiary,
+      backgroundColor: 'rgba(212, 169, 106, 0.35)',
       shadowOpacity: 0,
       elevation: 0,
     },
     loginButtonText: {
-      color: '#FFFFFF',
-      fontSize: 18,
-      fontWeight: '600',
+      color: '#1A1208',
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: 0.3,
     },
+    // ── Forgot password ──
     forgotPasswordContainer: {
       alignItems: 'center',
-      marginBottom: 32,
+      marginBottom: 8,
     },
     forgotPasswordText: {
-      color: colors.primary,
-      fontSize: 16,
-      fontWeight: '500',
+      color: '#D4A96A',
+      fontSize: 14,
+      fontWeight: '600',
     },
+    // ── Divider ──
     dividerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 32,
+      marginVertical: 24,
     },
     dividerLine: {
       flex: 1,
       height: 1,
-      backgroundColor: colors.divider,
+      backgroundColor: 'rgba(255,255,255,0.1)',
     },
     dividerText: {
-      marginHorizontal: 16,
-      color: colors.textSecondary,
-      fontSize: 14,
+      marginHorizontal: 14,
+      color: 'rgba(255,255,255,0.35)',
+      fontSize: 13,
       fontWeight: '500',
     },
+    // ── Sign up ──
     signupContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
+      gap: 4,
     },
     signupText: {
-      color: colors.textSecondary,
-      fontSize: 16,
+      color: 'rgba(255,255,255,0.45)',
+      fontSize: 14,
     },
     signupLink: {
-      color: colors.primary,
-      fontSize: 16,
-      fontWeight: '600',
-      marginLeft: 4,
+      color: '#D4A96A',
+      fontSize: 14,
+      fontWeight: '700',
     },
   });
 
   if (authLoading) {
-    return <LoadingSpinner message="Loading..." color={colors.primary} />;
+    return <LoadingSpinner message="Loading..." color="#D4A96A" />;
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
-        >
-          {/* Logo and Title */}
-          <View style={styles.logoContainer}>
-            <View style={styles.logoIcon}>
-              <Ionicons name="person" size={40} color="#FFFFFF" />
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <Image
+        source={{ uri: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=1200&fit=crop' }}
+        style={styles.bgImage}
+        resizeMode="cover"
+      />
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+
+          {/* Brand Block */}
+          <View style={styles.brandBlock}>
+            <View style={styles.logoRing}>
+              <Ionicons name="person" size={32} color="#D4A96A" />
             </View>
+            <Text style={styles.eyebrow}>Ideal Furniture</Text>
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to your account</Text>
           </View>
 
-          {/* Login Form */}
+          {/* Form */}
           <View style={styles.formContainer}>
-            {/* Email Input */}
+            {/* Email */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Email</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[
-                    styles.input,
-                    emailError && styles.inputError,
-                  ]}
+                  style={[styles.input, emailError ? styles.inputError : null]}
                   placeholder="Enter your email"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   value={email}
-                  onChangeText={(text) => {
-                    setEmail(text);
-                    if (emailError) validateEmail(text);
-                  }}
+                  onChangeText={(text) => { setEmail(text); if (emailError) validateEmail(text); }}
                   onBlur={() => validateEmail(email)}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -347,22 +308,16 @@ const LoginPage: React.FC = () => {
               {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
             </View>
 
-            {/* Password Input */}
+            {/* Password */}
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Password</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[
-                    styles.input,
-                    passwordError && styles.inputError,
-                  ]}
+                  style={[styles.input, passwordError ? styles.inputError : null]}
                   placeholder="Enter your password"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor="rgba(255,255,255,0.25)"
                   value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (passwordError) validatePassword(text);
-                  }}
+                  onChangeText={(text) => { setPassword(text); if (passwordError) validatePassword(text); }}
                   onBlur={() => validatePassword(password)}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
@@ -377,20 +332,17 @@ const LoginPage: React.FC = () => {
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
-                    size={24}
-                    color={colors.textSecondary}
+                    size={22}
+                    color="rgba(255,255,255,0.4)"
                   />
                 </TouchableOpacity>
               </View>
               {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
             </View>
 
-            {/* Login Button */}
+            {/* Sign In Button */}
             <TouchableOpacity
-              style={[
-                styles.loginButton,
-                isLoading && styles.loginButtonDisabled,
-              ]}
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={isLoading}
             >
@@ -400,11 +352,7 @@ const LoginPage: React.FC = () => {
             </TouchableOpacity>
 
             {/* Forgot Password */}
-            <TouchableOpacity
-              style={styles.forgotPasswordContainer}
-              onPress={handleForgotPasswordClick}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={styles.forgotPasswordContainer} onPress={handleForgotPasswordClick} disabled={isLoading}>
               <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
@@ -416,25 +364,19 @@ const LoginPage: React.FC = () => {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Sign Up Link */}
+          {/* Sign Up */}
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don't have an account?</Text>
-            <TouchableOpacity
-              onPress={handleSignupClick}
-              disabled={isLoading}
-            >
+            <TouchableOpacity onPress={handleSignupClick} disabled={isLoading}>
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+
         </Animated.View>
       </ScrollView>
 
-      {/* Loading Overlay */}
-      {isLoading && (
-        <LoadingSpinner message="Signing you in..." color={colors.primary} />
-      )}
+      {isLoading && <LoadingSpinner message="Signing you in..." color="#D4A96A" />}
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertVisible}
         type={alertConfig.type}
