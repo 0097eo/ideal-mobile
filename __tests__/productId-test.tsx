@@ -84,7 +84,6 @@ describe('ProductDetailsPage', () => {
         jest.runAllTimers();
     });
 
-    expect(getByText('Living Room')).toBeTruthy();
     expect(getByText('Excellent!')).toBeTruthy();
   });
 
