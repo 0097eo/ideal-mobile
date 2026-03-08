@@ -10,9 +10,11 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemes } from '@/hooks/themes';
+import { useThemes, AppColors } from '@/hooks/themes';
+
 const { width: screenWidth } = Dimensions.get('window');
 
+// ─── Props ────────────────────────────────────────────────────────────────────
 interface CustomAlertProps {
   visible: boolean;
   type: 'success' | 'error' | 'warning' | 'info';
@@ -25,6 +27,43 @@ interface CustomAlertProps {
   showCancel?: boolean;
 }
 
+// ─── Per-type palette (derived from theme colors) ─────────────────────────────
+const getTypePalette = (colors: AppColors) => ({
+  success: {
+    icon: 'checkmark-circle' as const,
+    fg:      colors.success,
+    bg:      `${colors.success}1A`,
+    border:  `${colors.success}4D`,
+    btnBg:   colors.success,
+    btnText: '#0F2015',
+  },
+  error: {
+    icon: 'close-circle' as const,
+    fg:      colors.error,
+    bg:      `${colors.error}1A`,
+    border:  `${colors.error}4D`,
+    btnBg:   colors.error,
+    btnText: '#FFFFFF',
+  },
+  warning: {
+    icon: 'warning' as const,
+    fg:      colors.warning,
+    bg:      `${colors.warning}1A`,
+    border:  `${colors.warning}4D`,
+    btnBg:   colors.warning,
+    btnText: '#2A1A00',
+  },
+  info: {
+    icon: 'information-circle' as const,
+    fg:      '#60A5FA',
+    bg:      'rgba(96,165,250,0.10)',
+    border:  'rgba(96,165,250,0.30)',
+    btnBg:   '#60A5FA',
+    btnText: '#FFFFFF',
+  },
+});
+
+// ─── Component ────────────────────────────────────────────────────────────────
 const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
   type,
@@ -36,64 +75,32 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   cancelText = 'Cancel',
   showCancel = false,
 }) => {
+  const { colors } = useThemes();
+  const styles = makeStyles(colors);
+  const typePalette = getTypePalette(colors);
+
   const scaleAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const { colors, isDark } = useThemes();
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 6,
-          tension: 150,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim,  { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.spring(scaleAnim, { toValue: 1, friction: 6, tension: 150, useNativeDriver: true }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
+        Animated.timing(fadeAnim,  { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(scaleAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
       ]).start();
     }
   }, [visible, fadeAnim, scaleAnim]);
 
-  const getIconAndColor = () => {
-    switch (type) {
-      case 'success':
-        return { icon: 'checkmark-circle', color: colors.success, bgColor: isDark ? '#1E3A1E' : '#D1FAE5' };
-      case 'error':
-        return { icon: 'close-circle', color: colors.error, bgColor: isDark ? '#3B0D0C' : '#FEE2E2' };
-      case 'warning':
-        return { icon: 'warning', color: colors.warning, bgColor: isDark ? '#4F2F05' : '#FEF3C7' };
-      case 'info':
-        return { icon: 'information-circle', color: colors.primary, bgColor: isDark ? '#1E3A8A' : '#DBEAFE' };
-      default:
-        return { icon: 'information-circle', color: colors.textSecondary, bgColor: colors.surface };
-    }
-  };
-
-  const { icon, color, bgColor } = getIconAndColor();
+  const palette = typePalette[type] ?? typePalette.info;
 
   const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
-    } else {
-      onClose();
-    }
+    if (onConfirm) onConfirm();
+    else onClose();
   };
 
   return (
@@ -101,55 +108,46 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
           <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.alertContainer,
-                {
-                  backgroundColor: colors.surface,
-                  shadowColor: colors.shadow,
-                  transform: [{ scale: scaleAnim }],
-                  opacity: fadeAnim,
-                },
-              ]}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
-                <Ionicons name={icon as any} size={32} color={color} />
+            <Animated.View style={[styles.alertContainer, { transform: [{ scale: scaleAnim }], opacity: fadeAnim }]}>
+
+              {/* Gold top accent */}
+              <View style={styles.topAccentLine} />
+
+              {/* Icon ring */}
+              <View style={[styles.iconRingOuter, { borderColor: palette.border }]}>
+                <View style={[styles.iconRingInner, { backgroundColor: palette.bg, borderColor: palette.border }]}>
+                  <Ionicons name={palette.icon} size={30} color={palette.fg} />
+                </View>
               </View>
 
+              {/* Text */}
               <View style={styles.contentContainer}>
-                <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-                <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
+                <Text style={styles.title}>{title}</Text>
+                <Text style={styles.message}>{message}</Text>
               </View>
 
+              {/* Divider */}
+              <View style={styles.divider} />
+
+              {/* Buttons */}
               <View style={styles.buttonContainer}>
                 {showCancel && (
-                  <TouchableOpacity
-                    style={[
-                      styles.button,
-                      {
-                        backgroundColor: colors.background,
-                        borderColor: colors.border,
-                        borderWidth: 1,
-                      },
-                    ]}
-                    onPress={onClose}
-                  >
-                    <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>
-                      {cancelText}
-                    </Text>
+                  <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                    <Text style={styles.cancelButtonText}>{cancelText}</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
                   style={[
-                    styles.button,
-                    { backgroundColor: color },
+                    styles.confirmButton,
+                    { backgroundColor: palette.btnBg },
                     !showCancel && styles.fullWidthButton,
                   ]}
                   onPress={handleConfirm}
                 >
-                  <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                  <Text style={[styles.confirmButtonText, { color: palette.btnText }]}>{confirmText}</Text>
                 </TouchableOpacity>
               </View>
+
             </Animated.View>
           </TouchableWithoutFeedback>
         </Animated.View>
@@ -158,74 +156,118 @@ const CustomAlert: React.FC<CustomAlertProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.modalOverlay,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   alertContainer: {
+    backgroundColor: colors.surface,
     borderRadius: 20,
-    padding: 24,
-    width: screenWidth - 40,
+    width: screenWidth - 48,
     maxWidth: 340,
     alignItems: 'center',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    elevation: 16,
   },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
+  topAccentLine: {
+    width: '100%',
+    height: 2,
+    backgroundColor: colors.primary,
+    opacity: 0.6,
+  },
+  iconRingOuter: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 1,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginTop: 28,
+    marginBottom: 6,
+  },
+  iconRingInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   contentContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    gap: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    color: colors.text,
+    letterSpacing: 0.2,
   },
   message: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
+    color: colors.textSecondary,
+  },
+  divider: {
+    width: '100%',
+    height: 1,
+    backgroundColor: colors.divider,
   },
   buttonContainer: {
     flexDirection: 'row',
     width: '100%',
-    gap: 12,
+    padding: 16,
+    gap: 10,
   },
-  button: {
+  cancelButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 13,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
+  },
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   fullWidthButton: {
     flex: 1,
   },
   confirmButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
 

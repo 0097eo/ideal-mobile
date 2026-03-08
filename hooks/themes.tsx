@@ -1,107 +1,97 @@
 import { useState, useEffect } from 'react';
 import { Appearance } from 'react-native';
 
+// ─── Light Theme (warm luxury) ─────────────────────────────────────────────
 const lightTheme = {
-    background: '#fafafa',
-    surface: '#ffffff',
-    card: '#ffffff',
-    text: '#1a1a1a',
-    textSecondary: '#666666',
-    textTertiary: '#999999',
-    border: '#f0f0f0',
-    divider: '#e5e5e5',
-    primary: '#f59e0b',
-    success: '#34C759',
-    warning: '#FF9500',
-    error: '#FF3B30',
-    shadow: '#000000',
-    navigationBackground: '#fafafa',
-    navigationText: '#1a1a1a',
-    modalOverlay: 'rgba(0, 0, 0, 0.5)',
+    background:            '#FAF7F2',
+    surface:               '#FFFFFF',
+    card:                  '#FDF9F4',
+    text:                  '#1C1510',
+    textSecondary:         '#6B5D4F',
+    textTertiary:          '#9C8E82',
+    border:                'rgba(0,0,0,0.08)',
+    divider:               'rgba(0,0,0,0.10)',
+    primary:               '#B8843A',       // darker gold — readable on light bg
+    primaryDim:            'rgba(184,132,58,0.12)',
+    primaryBorder:         'rgba(184,132,58,0.35)',
+    primaryText:           '#FFFFFF',           // text on primary-colored buttons
+    stickyBackground:      'rgba(250,247,242,0.96)', 
+    success:               '#22C55E',
+    warning:               '#D97706',
+    error:                 '#DC2626',
+    shadow:                '#000000',
+    navigationBackground:  '#FAF7F2',
+    navigationText:        '#1C1510',
+    modalOverlay:          'rgba(0,0,0,0.50)',
 };
 
+// ─── Dark Theme (luxury dark) ──────────────────────────────────────────────
 const darkTheme = {
-    background: '#000000',
-    surface: '#1c1c1e',
-    card: '#2c2c2e',
-    text: '#ffffff',
-    textSecondary: '#a1a1a6',
-    textTertiary: '#6d6d70',
-    border: '#38383a',
-    divider: '#48484a',
-    primary: '#f59e0b',
-    success: '#30D158',
-    warning: '#FF9F0A',
-    error: '#FF453A',
-    shadow: '#000000',
-    navigationBackground: '#000000',
-    navigationText: '#ffffff',
-    modalOverlay: 'rgba(0, 0, 0, 0.7)',
-}
+    background:            '#0F0C08',
+    surface:               'rgba(255,255,255,0.07)',
+    card:                  'rgba(255,255,255,0.04)',
+    text:                  '#FFFFFF',
+    textSecondary:         'rgba(255,255,255,0.55)',
+    textTertiary:          'rgba(255,255,255,0.28)',
+    border:                'rgba(255,255,255,0.09)',
+    divider:               'rgba(255,255,255,0.12)',
+    primary:               '#D4A96A',       // luxury gold
+    primaryDim:            'rgba(212,169,106,0.12)',
+    primaryBorder:         'rgba(212,169,106,0.35)',
+     primaryText:           '#1A1208',           // text on primary-colored buttons
+    stickyBackground:      'rgba(15,12,8,0.96)',
+    success:               '#4ADE80',
+    warning:               '#FBBF24',
+    error:                 '#FF6B6B',
+    shadow:                '#000000',
+    navigationBackground:  '#0F0C08',
+    navigationText:        '#FFFFFF',
+    modalOverlay:          'rgba(0,0,0,0.75)',
+};
+
+export type AppColors = typeof lightTheme;
 
 export const useThemes = () => {
-    //get initial color scheme from system
     const deviceColorScheme = Appearance.getColorScheme();
-
-    //state for manual override
-    const [manualColorScheme, setManualColorScheme] = useState<"light" | "dark" | null>(null);
-
-
-    //state for current theme
+    const [manualColorScheme, setManualColorScheme] = useState<'light' | 'dark' | null>(null);
     const [systemColorScheme, setSystemColorScheme] = useState(deviceColorScheme);
 
-    // Listen for system color scheme changes
     useEffect(() => {
         const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-        setSystemColorScheme(colorScheme);
+            setSystemColorScheme(colorScheme);
         });
-        
         return () => subscription?.remove();
     }, []);
 
-     // Determine current color scheme
     const currentColorScheme = manualColorScheme || systemColorScheme || 'light';
-    
-    // Get current theme
-    const colors = currentColorScheme === 'dark' ? darkTheme : lightTheme;
+    const colors: AppColors = currentColorScheme === 'dark' ? darkTheme : lightTheme;
 
-    // Theme switching functions
-    const setLightMode = () => setManualColorScheme('light');
-    const setDarkMode = () => setManualColorScheme('dark');
+    const setLightMode  = () => setManualColorScheme('light');
+    const setDarkMode   = () => setManualColorScheme('dark');
     const setSystemMode = () => setManualColorScheme(null);
-    
-    // Toggle between light and dark (doesn't affect system following)
+
     const toggleColorScheme = () => {
         if (manualColorScheme === 'dark') {
-        setLightMode();
+            setLightMode();
         } else if (manualColorScheme === 'light') {
-        setDarkMode();
+            setDarkMode();
         } else {
-        // If following system, toggle to opposite of current system
-        setManualColorScheme(systemColorScheme === 'dark' ? 'light' : 'dark');
+            setManualColorScheme(systemColorScheme === 'dark' ? 'light' : 'dark');
         }
     };
-    
+
     return {
-        // Current state
-        colorScheme: currentColorScheme,
-        isDark: currentColorScheme === 'dark',
-        isLight: currentColorScheme === 'light',
-        isFollowingSystem: manualColorScheme === null,
+        colorScheme:        currentColorScheme,
+        isDark:             currentColorScheme === 'dark',
+        isLight:            currentColorScheme === 'light',
+        isFollowingSystem:  manualColorScheme === null,
         systemColorScheme,
-        
-        // Colors
         colors,
-        
-        // Theme switching functions
         setLightMode,
         setDarkMode,
         setSystemMode,
         toggleColorScheme,
-        
-        // Helper function to create styles with theme colors
-        createStyles: <T extends object>(styleFunction: (colors: typeof lightTheme) => T): T =>
-        styleFunction(colors),
-
+        createStyles: <T extends object>(styleFunction: (colors: AppColors) => T): T =>
+            styleFunction(colors),
     };
 };
