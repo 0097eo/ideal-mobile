@@ -10,7 +10,7 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import { useThemes } from '@/hooks/themes';
+import { useThemes, AppColors } from '@/hooks/themes';
 import { Product, Category } from '@/types/product';
 import ProductCard from '@/components/ProductCard';
 import { API_URL } from '@/constants/api';
@@ -21,7 +21,7 @@ import { router } from 'expo-router';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Types
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface ProductResponse {
   count: number;
   next: string | null;
@@ -55,165 +55,70 @@ interface AlertState {
   showCancel?: boolean;
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
 const Index = () => {
   const { colors, createStyles } = useThemes();
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  // Product states
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState<boolean>(true);
   const [productsError, setProductsError] = useState<string | null>(null);
 
-  // Other states
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<AlertState>({
-    visible: false,
-    type: 'info',
-    title: '',
-    message: '',
+    visible: false, type: 'info', title: '', message: '',
   });
 
-  // Animation values
   const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [1, 0.8],
-    extrapolate: 'clamp',
+    inputRange: [0, 200], outputRange: [1, 0.8], extrapolate: 'clamp',
   });
 
   const heroScale = scrollY.interpolate({
-    inputRange: [-100, 0, 200],
-    outputRange: [1.08, 1, 0.96],
-    extrapolate: 'clamp',
+    inputRange: [-100, 0, 200], outputRange: [1.08, 1, 0.96], extrapolate: 'clamp',
   });
 
-  // Mock data for furniture store
   const features: Feature[] = [
-    {
-      id: 1,
-      icon: 'car-outline',
-      title: 'Free Delivery',
-      description: 'Free delivery on orders over KSh 50,000. Fast and reliable shipping nationwide.',
-    },
-    {
-      id: 2,
-      icon: 'construct-outline',
-      title: 'Assembly Service',
-      description: 'Professional assembly service available for all furniture pieces.',
-    },
-    {
-      id: 3,
-      icon: 'return-down-back-outline',
-      title: '30-Day Returns',
-      description: 'Not satisfied? Return within 30 days for a full refund, no questions asked.',
-    },
-    {
-      id: 4,
-      icon: 'ribbon-outline',
-      title: 'Quality Guarantee',
-      description: 'Premium materials and craftsmanship with lifetime warranty on selected items.',
-    },
+    { id: 1, icon: 'car-outline',               title: 'Free Delivery',      description: 'Free delivery on orders over KSh 50,000. Fast and reliable shipping nationwide.' },
+    { id: 2, icon: 'construct-outline',          title: 'Assembly Service',   description: 'Professional assembly service available for all furniture pieces.' },
+    { id: 3, icon: 'return-down-back-outline',   title: '30-Day Returns',     description: 'Not satisfied? Return within 30 days for a full refund, no questions asked.' },
+    { id: 4, icon: 'ribbon-outline',             title: 'Quality Guarantee',  description: 'Premium materials and craftsmanship with lifetime warranty on selected items.' },
   ];
 
   const testimonials: Testimonial[] = [
-    {
-      id: 1,
-      name: 'Joan Mdivo',
-      role: 'Interior Designer',
-      image: 'https://images.unsplash.com/photo-1563581410561-7debcf2b09c8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c3BhbmlzaCUyMHdvbWFufGVufDB8fDB8fHww',
-      rating: 5,
-      comment: 'Exceptional quality furniture with amazing customer service. The dining set I ordered exceeded my expectations!',
-    },
-    {
-      id: 2,
-      name: 'David Ngethe',
-      role: 'Homeowner',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      rating: 5,
-      comment: 'Fast delivery and easy assembly. The sofa is incredibly comfortable and looks perfect in our living room.',
-    },
-    {
-      id: 3,
-      name: 'Sarah Wanyonyi',
-      role: 'Property Manager',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-      rating: 4,
-      comment: 'Great selection of modern furniture at competitive prices. Perfect for our rental properties.',
-    },
+    { id: 1, name: 'Joan Mdivo',     role: 'Interior Designer', image: 'https://images.unsplash.com/photo-1563581410561-7debcf2b09c8?w=600&auto=format&fit=crop&q=60', rating: 5, comment: 'Exceptional quality furniture with amazing customer service. The dining set I ordered exceeded my expectations!' },
+    { id: 2, name: 'David Ngethe',   role: 'Homeowner',         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face', rating: 5, comment: 'Fast delivery and easy assembly. The sofa is incredibly comfortable and looks perfect in our living room.' },
+    { id: 3, name: 'Sarah Wanyonyi', role: 'Property Manager',  image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face', rating: 4, comment: 'Great selection of modern furniture at competitive prices. Perfect for our rental properties.' },
   ];
 
   const categories: Category[] = [
-    {
-      id: 1,
-      name: 'Living Room',
-      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
-      desription: 'Sofas, coffee tables, and entertainment centers',
-    },
-    {
-      id: 2,
-      name: 'Bedroom',
-      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop',
-      desription: 'Beds, dressers, and nightstands',
-    },
-    {
-      id: 3,
-      name: 'Dining Room',
-      image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop',
-      desription: 'Dining sets, chairs, and storage solutions',
-    },
-    {
-      id: 4,
-      name: 'Office',
-      image: 'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop',
-      desription: 'Desks, office chairs, and storage units',
-    },
+    { id: 1, name: 'Living Room',  image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',  desription: 'Sofas, coffee tables, and entertainment centers' },
+    { id: 2, name: 'Bedroom',      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop',  desription: 'Beds, dressers, and nightstands' },
+    { id: 3, name: 'Dining Room',  image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop',  desription: 'Dining sets, chairs, and storage solutions' },
+    { id: 4, name: 'Office',       image: 'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop',  desription: 'Desks, office chairs, and storage units' },
   ];
 
-  // Fetch trending products
   const fetchTrendingProducts = useCallback(async () => {
     try {
       setProductsLoading(true);
       setProductsError(null);
-      const params = new URLSearchParams({
-        ordering: '-created_at',
-        limit: '8',
-        is_available: 'true',
-      });
-
-      const url = `${API_URL}/products/products/?${params.toString()}`;
-
-      const response = await fetch(url, {
+      const params = new URLSearchParams({ ordering: '-created_at', limit: '8', is_available: 'true' });
+      const response = await fetch(`${API_URL}/products/products/?${params.toString()}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data: ProductResponse = await response.json();
       setTrendingProducts(data.results);
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch trending products';
       setProductsError(errorMessage);
-
-      showAlert(
-        'error',
-        'Failed to Load Products',
-        'Unable to load trending products. Please check your connection and try again.',
-        () => fetchTrendingProducts(),
-        'Retry',
-        true
-      );
+      showAlert('error', 'Failed to Load Products', 'Unable to load trending products. Please check your connection and try again.', () => fetchTrendingProducts(), 'Retry', true);
     } finally {
       setProductsLoading(false);
     }
   }, []);
 
-  // Alert functions
   const showAlert = (
     type: AlertState['type'],
     title: string,
@@ -222,42 +127,29 @@ const Index = () => {
     confirmText?: string,
     showCancel?: boolean
   ) => {
-    setAlert({
-      visible: true,
-      type,
-      title,
-      message,
-      onConfirm,
-      confirmText,
-      showCancel
-    });
+    setAlert({ visible: true, type, title, message, onConfirm, confirmText, showCancel });
   };
 
-  const hideAlert = () => {
-    setAlert(prev => ({ ...prev, visible: false }));
-  };
+  const hideAlert = () => setAlert(prev => ({ ...prev, visible: false }));
 
   const handleNewsletterSignup = async () => {
     if (!email.trim()) {
       showAlert('warning', 'Invalid Email', 'Please enter a valid email address.');
       return;
     }
-
     setLoading(true);
-
     setTimeout(() => {
       setLoading(false);
       setEmail('');
-      showAlert('success', 'Success!', 'Thank you for subscribing! You&apos;ll receive our latest furniture deals and design tips.');
+      showAlert('success', 'Success!', "Thank you for subscribing! You'll receive our latest furniture deals and design tips.");
     }, 1500);
   };
 
-  // Initial load
   useEffect(() => {
     fetchTrendingProducts();
   }, [fetchTrendingProducts]);
 
-  const styles = createStyles((colors) => StyleSheet.create({
+  const styles = createStyles((colors: AppColors) => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
@@ -266,7 +158,7 @@ const Index = () => {
       flex: 1,
     },
 
-    // ── Hero Section ──────────────────────────────────────────────
+    // ── Hero — always overlaid on image, keep hardcoded light colors ──────
     headerSection: {
       height: 340,
       overflow: 'hidden',
@@ -290,7 +182,7 @@ const Index = () => {
     heroEyebrow: {
       fontSize: 11,
       letterSpacing: 3.5,
-      color: '#D4A96A',
+      color: colors.primary,
       textTransform: 'uppercase',
       marginBottom: 10,
       fontWeight: '600',
@@ -298,7 +190,7 @@ const Index = () => {
     heroTitle: {
       fontSize: 38,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: '#FFFFFF',       // always white — over dark image overlay
       marginBottom: 10,
       letterSpacing: -0.5,
       lineHeight: 44,
@@ -315,13 +207,13 @@ const Index = () => {
       gap: 12,
     },
     heroCta: {
-      backgroundColor: '#D4A96A',
+      backgroundColor: colors.primary,
       paddingHorizontal: 22,
       paddingVertical: 13,
       borderRadius: 8,
     },
     heroCtaText: {
-      color: '#1A1208',
+      color: colors.primaryText,
       fontWeight: '700',
       fontSize: 14,
       letterSpacing: 0.3,
@@ -339,14 +231,14 @@ const Index = () => {
       fontSize: 14,
     },
 
-    // ── Section shared ────────────────────────────────────────────
+    // ── Section shared ────────────────────────────────────────────────────
     sectionHeader: {
       marginBottom: 24,
     },
     sectionEyebrow: {
       fontSize: 10,
       letterSpacing: 3,
-      color: '#D4A96A',
+      color: colors.primary,
       textTransform: 'uppercase',
       fontWeight: '700',
       marginBottom: 6,
@@ -367,7 +259,7 @@ const Index = () => {
       lineHeight: 22,
     },
 
-    // ── Trending Products ─────────────────────────────────────────
+    // ── Trending Products ─────────────────────────────────────────────────
     trendingSection: {
       paddingVertical: 32,
       paddingHorizontal: 20,
@@ -377,7 +269,7 @@ const Index = () => {
       paddingHorizontal: 4,
     },
 
-    // ── Categories ────────────────────────────────────────────────
+    // ── Categories ────────────────────────────────────────────────────────
     categoriesSection: {
       paddingVertical: 32,
       paddingHorizontal: 20,
@@ -394,7 +286,7 @@ const Index = () => {
       overflow: 'hidden',
       height: 140,
       backgroundColor: colors.card,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.12,
       shadowRadius: 8,
@@ -419,7 +311,7 @@ const Index = () => {
     categoryName: {
       fontSize: 15,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: '#FFFFFF',       // always white — over dark image overlay
       marginBottom: 2,
     },
     categoryDescription: {
@@ -428,7 +320,7 @@ const Index = () => {
       lineHeight: 14,
     },
 
-    // ── Features ──────────────────────────────────────────────────
+    // ── Features ──────────────────────────────────────────────────────────
     featuresSection: {
       paddingVertical: 32,
       paddingHorizontal: 20,
@@ -444,7 +336,7 @@ const Index = () => {
       backgroundColor: colors.surface,
       padding: 20,
       borderRadius: 14,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.07,
       shadowRadius: 6,
@@ -454,13 +346,10 @@ const Index = () => {
       width: 48,
       height: 48,
       borderRadius: 12,
-      backgroundColor: 'rgba(212, 169, 106, 0.12)',
+      backgroundColor: colors.primaryDim,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 14,
-    },
-    featureIcon: {
-      fontSize: 32,
     },
     featureTitle: {
       fontSize: 14,
@@ -475,7 +364,7 @@ const Index = () => {
       lineHeight: 18,
     },
 
-    // ── Testimonials ──────────────────────────────────────────────
+    // ── Testimonials ──────────────────────────────────────────────────────
     testimonialsSection: {
       paddingVertical: 32,
       backgroundColor: colors.surface,
@@ -490,18 +379,18 @@ const Index = () => {
       borderRadius: 16,
       marginRight: 16,
       width: screenWidth - 80,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 10,
       elevation: 4,
       borderWidth: 1,
-      borderColor: colors.divider ?? 'rgba(0,0,0,0.05)',
+      borderColor: colors.divider,
     },
     quoteMark: {
       fontSize: 52,
       lineHeight: 44,
-      color: '#D4A96A',
+      color: colors.primary,
       fontWeight: '900',
       marginBottom: 8,
       opacity: 0.7,
@@ -515,7 +404,7 @@ const Index = () => {
     },
     testimonialDivider: {
       height: 1,
-      backgroundColor: colors.divider ?? 'rgba(0,0,0,0.06)',
+      backgroundColor: colors.divider,
       marginBottom: 16,
     },
     testimonialHeader: {
@@ -528,7 +417,7 @@ const Index = () => {
       borderRadius: 21,
       marginRight: 12,
       borderWidth: 2,
-      borderColor: '#D4A96A',
+      borderColor: colors.primary,
     },
     testimonialName: {
       fontSize: 14,
@@ -546,21 +435,21 @@ const Index = () => {
     },
     star: {
       fontSize: 12,
-      color: '#D4A96A',
+      color: colors.primary,
       marginRight: 1,
     },
 
-    // ── Newsletter ────────────────────────────────────────────────
+    // ── Newsletter — intentionally dark branded section ────────────────────
     newsletterSection: {
       paddingVertical: 40,
       paddingHorizontal: 24,
-      backgroundColor: '#1A1208',
+      backgroundColor: '#1A1208',   // brand dark — intentional, not theme bg
       alignItems: 'center',
     },
     newsletterBadge: {
-      backgroundColor: 'rgba(212, 169, 106, 0.15)',
+      backgroundColor: colors.primaryDim,
       borderWidth: 1,
-      borderColor: 'rgba(212, 169, 106, 0.3)',
+      borderColor: colors.primaryBorder,
       borderRadius: 20,
       paddingHorizontal: 14,
       paddingVertical: 5,
@@ -568,7 +457,7 @@ const Index = () => {
     },
     newsletterBadgeText: {
       fontSize: 11,
-      color: '#D4A96A',
+      color: colors.primary,
       letterSpacing: 2,
       textTransform: 'uppercase',
       fontWeight: '600',
@@ -607,19 +496,19 @@ const Index = () => {
       color: '#FFFFFF',
     },
     subscribeButton: {
-      backgroundColor: '#D4A96A',
+      backgroundColor: colors.primary,
       paddingHorizontal: 20,
       paddingVertical: 11,
       borderRadius: 9,
       marginLeft: 8,
     },
     subscribeButtonText: {
-      color: '#1A1208',
+      color: colors.primaryText,
       fontWeight: '700',
       fontSize: 13,
     },
 
-    // ── Loading / Error ───────────────────────────────────────────
+    // ── Loading / Error ───────────────────────────────────────────────────
     loadingContainer: {
       padding: 48,
       alignItems: 'center',
@@ -647,7 +536,7 @@ const Index = () => {
       borderRadius: 8,
     },
     retryButtonText: {
-      color: colors.surface,
+      color: colors.primaryText,
       fontWeight: '600',
       fontSize: 14,
     },
@@ -668,7 +557,7 @@ const Index = () => {
     },
   }));
 
-  // Render functions
+  // ── Render helpers ────────────────────────────────────────────────────────
   const renderTrendingProduct = ({ item }: { item: Product }) => (
     <View style={{ marginHorizontal: 8 }}>
       <ProductCard product={item} />
@@ -708,13 +597,8 @@ const Index = () => {
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero Section */}
-        <Animated.View
-          style={[
-            styles.headerSection,
-            { opacity: headerOpacity, transform: [{ scale: heroScale }] },
-          ]}
-        >
+        {/* ── Hero ── */}
+        <Animated.View style={[styles.headerSection, { opacity: headerOpacity, transform: [{ scale: heroScale }] }]}>
           <Image
             source={{ uri: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&h=600&fit=crop' }}
             style={styles.heroImageBg}
@@ -736,27 +620,20 @@ const Index = () => {
           </View>
         </Animated.View>
 
-        {/* Trending Products Section */}
+        {/* ── Trending Products ── */}
         <View style={styles.trendingSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Curated for You</Text>
             <Text style={styles.sectionTitle}>Trending Products</Text>
           </View>
-
           {productsLoading ? (
             <View style={styles.loadingContainer}>
-              <FullScreenLoader
-                message="Loading trending products..."
-                color={colors.primary}
-              />
+              <FullScreenLoader message="Loading trending products..." color={colors.primary} />
             </View>
           ) : productsError ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{productsError}</Text>
-              <TouchableOpacity
-                style={styles.retryButton}
-                onPress={fetchTrendingProducts}
-              >
+              <TouchableOpacity style={styles.retryButton} onPress={fetchTrendingProducts}>
                 <Text style={styles.retryButtonText}>Retry</Text>
               </TouchableOpacity>
             </View>
@@ -770,17 +647,14 @@ const Index = () => {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.productsList}
               />
-              <TouchableOpacity
-                style={styles.viewAllButton}
-                onPress={() => router.push('/shop')}
-              >
+              <TouchableOpacity style={styles.viewAllButton} onPress={() => router.push('/shop')}>
                 <Text style={styles.viewAllButtonText}>View All Products</Text>
               </TouchableOpacity>
             </>
           )}
         </View>
 
-        {/* Categories Section */}
+        {/* ── Categories ── */}
         <View style={styles.categoriesSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Browse</Text>
@@ -789,11 +663,7 @@ const Index = () => {
           <View style={styles.categoriesGrid}>
             {categories.map((category) => (
               <TouchableOpacity key={category.id} style={styles.categoryCard}>
-                <Image
-                  source={{ uri: category.image }}
-                  style={styles.categoryImage}
-                  resizeMode="cover"
-                />
+                <Image source={{ uri: category.image }} style={styles.categoryImage} resizeMode="cover" />
                 <View style={styles.categoryGradient} />
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{category.name}</Text>
@@ -804,20 +674,18 @@ const Index = () => {
           </View>
         </View>
 
-        {/* Features Section */}
+        {/* ── Features ── */}
         <View style={styles.featuresSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionEyebrow}>Our Promise</Text>
             <Text style={styles.sectionTitle}>Why Choose Us?</Text>
-            <Text style={styles.sectionSubtitle}>
-              We make furniture shopping easy with these exclusive benefits
-            </Text>
+            <Text style={styles.sectionSubtitle}>We make furniture shopping easy with these exclusive benefits</Text>
           </View>
           <View style={styles.featuresGrid}>
             {features.map((feature) => (
               <View key={feature.id} style={styles.featureCard}>
                 <View style={styles.featureIconWrapper}>
-                  <Ionicons name={feature.icon} size={24} color="#D4A96A" />
+                  <Ionicons name={feature.icon} size={24} color={colors.primary} />
                 </View>
                 <Text style={styles.featureTitle}>{feature.title}</Text>
                 <Text style={styles.featureDescription}>{feature.description}</Text>
@@ -826,14 +694,12 @@ const Index = () => {
           </View>
         </View>
 
-        {/* Testimonials Section */}
+        {/* ── Testimonials ── */}
         <View style={styles.testimonialsSection}>
           <View style={[styles.sectionHeader, styles.testimonialsHeader]}>
             <Text style={styles.sectionEyebrow}>Reviews</Text>
             <Text style={styles.sectionTitle}>Happy Customers</Text>
-            <Text style={styles.sectionSubtitle}>
-              See what our customers say about their furniture experience
-            </Text>
+            <Text style={styles.sectionSubtitle}>See what our customers say about their furniture experience</Text>
           </View>
           <FlatList
             data={testimonials}
@@ -845,7 +711,7 @@ const Index = () => {
           />
         </View>
 
-        {/* Newsletter Section */}
+        {/* ── Newsletter ── */}
         <View style={styles.newsletterSection}>
           <View style={styles.newsletterBadge}>
             <Text style={styles.newsletterBadgeText}>Exclusive Offers</Text>
@@ -864,20 +730,13 @@ const Index = () => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <TouchableOpacity
-              style={styles.subscribeButton}
-              onPress={handleNewsletterSignup}
-              disabled={loading}
-            >
-              <Text style={styles.subscribeButtonText}>
-                {loading ? 'Subscribing...' : 'Subscribe'}
-              </Text>
+            <TouchableOpacity style={styles.subscribeButton} onPress={handleNewsletterSignup} disabled={loading}>
+              <Text style={styles.subscribeButtonText}>{loading ? 'Subscribing...' : 'Subscribe'}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Animated.ScrollView>
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alert.visible}
         type={alert.type}

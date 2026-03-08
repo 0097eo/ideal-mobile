@@ -12,34 +12,33 @@ import CustomAlert from '@/components/CustomAlert';
 import { FullScreenLoader, LoadingSpinner } from '@/components/LoadingSpinner';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { useThemes } from '@/hooks/themes';
+import { useThemes, AppColors } from '@/hooks/themes';
 import { Product } from '@/types/product';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 
 const { width: screenWidth } = Dimensions.get('window');
-const ITEM_WIDTH = (screenWidth - 60) / 2;
+const ITEM_WIDTH = (screenWidth - 52) / 2;
 
+// ─── Interfaces ───────────────────────────────────────────────────────────────
 interface WishlistItemProps {
   product: Product;
   onRemove: (productId: number) => void;
   onAddToCart: (product: Product) => void;
-  colors: any;
+  colors: AppColors;
   isItemInCart: boolean;
 }
 
-const WishlistItem: React.FC<WishlistItemProps> = ({ 
-  product, 
-  onRemove, 
-  onAddToCart, 
-  colors,
-  isItemInCart
+// ─── WishlistItem ─────────────────────────────────────────────────────────────
+const WishlistItem: React.FC<WishlistItemProps> = ({
+  product, onRemove, onAddToCart, colors, isItemInCart,
 }) => {
+  const styles = makeStyles(colors);
   const [imageError, setImageError] = useState(false);
 
   const isOutOfStock = product.stock === 0;
-  const isDisabled = isOutOfStock || isItemInCart;
+  const isDisabled   = isOutOfStock || isItemInCart;
 
   const getButtonText = () => {
     if (isOutOfStock) return 'Out of Stock';
@@ -47,19 +46,35 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
     return 'Add to Cart';
   };
 
-  const getButtonIcon = () => {
-    if (isItemInCart) return 'checkmark-circle-outline';
-    return 'cart-outline';
-  };
-  
+  const getButtonIcon = (): keyof typeof Ionicons.glyphMap =>
+    isItemInCart ? 'checkmark-circle-outline' : 'cart-outline';
+
+  const buttonBg = isOutOfStock
+    ? colors.card
+    : isItemInCart
+    ? `${colors.success}14`
+    : colors.primary;
+
+  const buttonBorder = isOutOfStock
+    ? colors.border
+    : isItemInCart
+    ? `${colors.success}47`
+    : 'transparent';
+
+  const buttonTextColor = isOutOfStock
+    ? colors.textTertiary
+    : isItemInCart
+    ? colors.success
+    : colors.primaryText;
 
   return (
-    <View style={[styles.itemContainer, { backgroundColor: colors.card }]}>
-      {/* Product Image */}
-      <View style={[styles.imageContainer, { backgroundColor: colors.surface }]}>
+    <View style={styles.itemContainer}>
+      <View style={styles.cardAccentLine} />
+
+      <View style={styles.imageContainer}>
         {imageError ? (
-          <View style={[styles.imagePlaceholder, { backgroundColor: colors.background }]}>
-            <Ionicons name="image-outline" size={40} color={colors.textTertiary} />
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="image-outline" size={36} color={colors.textTertiary} />
           </View>
         ) : (
           <Image
@@ -69,109 +84,67 @@ const WishlistItem: React.FC<WishlistItemProps> = ({
             resizeMode="cover"
           />
         )}
-        
-        {/* Remove from Wishlist Button */}
-        <TouchableOpacity
-          style={[styles.removeButton, { backgroundColor: colors.background }]}
-          onPress={() => onRemove(product.id)}
-          activeOpacity={0.8}
-        >
+
+        <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(product.id)} activeOpacity={0.8}>
           <Text style={styles.heartEmoji}>❤️</Text>
         </TouchableOpacity>
 
+        {isOutOfStock && <View style={styles.outOfStockOverlay} />}
       </View>
 
-      {/* Product Info */}
       <View style={styles.productInfo}>
-        <Text 
-          style={[styles.productName, { color: colors.text }]} 
-          numberOfLines={2}
-        >
-          {product.name}
-        </Text>
-        
-        <Text 
-          style={[styles.productCategory, { color: colors.textSecondary }]}
-          numberOfLines={1}
-        >
+        <Text style={styles.productCategory} numberOfLines={1}>
           {(product.category_name || 'Uncategorized').toUpperCase()}
         </Text>
 
-        {/* Price Section */}
-        <View style={styles.priceContainer}>
-          <Text style={[styles.currentPrice, { color: colors.primary }]}>
-            Ksh {Math.floor(parseFloat(product.price)).toLocaleString()}
-          </Text>
-        </View>
+        <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
 
-        {/* Stock Status */}
+        <Text style={styles.currentPrice}>
+          Ksh {Math.floor(parseFloat(product.price)).toLocaleString()}
+        </Text>
+
         <View style={styles.stockContainer}>
-          <View style={[
-            styles.stockDot, 
-            { backgroundColor: product.stock > 0 ? colors.success : colors.error }
-          ]} />
-          <Text style={[
-            styles.stockText, 
-            { color: product.stock > 0 ? colors.success : colors.error }
-          ]}>
-            {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+          <View style={[styles.stockDot, { backgroundColor: product.stock > 0 ? colors.success : colors.error }]} />
+          <Text style={[styles.stockText, { color: product.stock > 0 ? colors.success : colors.error }]}>
+            {product.stock > 0 ? `${product.stock} in stock` : 'Unavailable'}
           </Text>
         </View>
 
-        {/* Add to Cart Button */}
         <TouchableOpacity
           style={[
             styles.addToCartButton,
-            { 
-              backgroundColor: isDisabled 
-                ? colors.textTertiary 
-                : isItemInCart 
-                  ? colors.success 
-                  : colors.primary,
-              opacity: isDisabled ? 0.6 : 1
-            }
+            {
+              backgroundColor: buttonBg,
+              borderColor: buttonBorder,
+              borderWidth: isItemInCart || isOutOfStock ? 1 : 0,
+              opacity: isOutOfStock ? 0.55 : 1,
+              shadowColor: isItemInCart || isOutOfStock ? 'transparent' : colors.primary,
+            },
           ]}
           onPress={() => onAddToCart(product)}
           disabled={isDisabled}
           activeOpacity={0.8}
         >
-          <Ionicons 
-            name={getButtonIcon()} 
-            size={16} 
-            color="white" 
-            style={styles.cartIcon} 
-          />
-          <Text style={styles.addToCartText}>
-            {getButtonText()}
-          </Text>
+          <Ionicons name={getButtonIcon()} size={14} color={buttonTextColor} />
+          <Text style={[styles.addToCartText, { color: buttonTextColor }]}>{getButtonText()}</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
+// ─── Wishlist ─────────────────────────────────────────────────────────────────
 const Wishlist: React.FC = () => {
   const { colors } = useThemes();
-  const { 
-    wishlistProducts, 
-    loading, 
-    error, 
-    removeFromWishlist, 
-    refreshWishlist, 
-    clearError 
-  } = useWishlist();
-  const { 
-    addToCart, 
-    loading: cartLoading, 
-    isItemInCart
-  } = useCart();
+  const styles = makeStyles(colors);
+  const { wishlistProducts, loading, error, removeFromWishlist, refreshWishlist, clearError } = useWishlist();
+  const { addToCart, loading: cartLoading, isItemInCart } = useCart();
 
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing]     = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
+  const [alertConfig, setAlertConfig]   = useState({
     type: 'success' as 'success' | 'error' | 'warning' | 'info',
-    title: '',
-    message: '',
+    title: '', message: '',
   });
 
   const showAlert = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
@@ -186,7 +159,7 @@ const Wishlist: React.FC = () => {
       clearError();
     } catch (err) {
       showAlert('error', 'Refresh Failed', 'Failed to refresh wishlist. Please try again.');
-      throw err
+      throw err;
     } finally {
       setRefreshing(false);
     }
@@ -195,7 +168,6 @@ const Wishlist: React.FC = () => {
   const handleRemoveFromWishlist = async (productId: number) => {
     const product = wishlistProducts.find(p => p.id === productId);
     const productName = product?.name || 'this item';
-
     try {
       const success = await removeFromWishlist(productId);
       if (success) {
@@ -205,22 +177,19 @@ const Wishlist: React.FC = () => {
       }
     } catch (err) {
       showAlert('error', 'Error', 'An unexpected error occurred. Please try again.');
-      throw err
+      throw err;
     }
   };
-
 
   const handleAddToCart = async (product: Product) => {
     if (product.stock === 0) {
       showAlert('warning', 'Out of Stock', 'This item is currently out of stock and cannot be added to cart.');
       return;
     }
-
     if (isItemInCart && isItemInCart(product.id)) {
       showAlert('info', 'Already in Cart', `${product.name} is already in your cart.`);
       return;
     }
-
     try {
       const result = await addToCart(product.id, 1);
       if (result.success) {
@@ -230,7 +199,7 @@ const Wishlist: React.FC = () => {
       }
     } catch (err) {
       showAlert('error', 'Error', 'An unexpected error occurred. Please try again.');
-      throw err
+      throw err;
     }
   };
 
@@ -246,74 +215,70 @@ const Wishlist: React.FC = () => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <View style={[styles.emptyIconContainer, { backgroundColor: colors.surface }]}>
-        <Ionicons name="heart-outline" size={64} color={colors.textTertiary} />
+      <View style={styles.emptyIconRing}>
+        <View style={styles.emptyIconInner}>
+          <Ionicons name="heart-outline" size={34} color={colors.primary} />
+        </View>
       </View>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>
-        Your Wishlist is Empty
-      </Text>
-      <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
-        Add items you love to your wishlist so you can easily find them later!
-      </Text>
+      <Text style={styles.emptyEyebrow}>Your Wishlist</Text>
+      <Text style={styles.emptyTitle}>Your Wishlist is Empty</Text>
+      <Text style={styles.emptyMessage}>Add items you love to your wishlist so you can easily find them later!</Text>
       <TouchableOpacity
-        style={[styles.shopNowButton, { backgroundColor: colors.primary }]}
-        onPress={() => {
-          router.push('/shop');
-          showAlert('info', 'Shop Now', 'Navigate to products to start adding items to your wishlist!');
-        }}
-        activeOpacity={0.8}
+        style={styles.shopNowButton}
+        onPress={() => { router.push('/shop'); showAlert('info', 'Shop Now', 'Navigate to products to start adding items to your wishlist!'); }}
+        activeOpacity={0.82}
       >
+        <Ionicons name="storefront-outline" size={16} color={colors.primaryText} />
         <Text style={styles.shopNowText}>Shop Now</Text>
       </TouchableOpacity>
     </View>
   );
 
   if (loading && wishlistProducts.length === 0) {
-    return (
-      <FullScreenLoader 
-        message="Loading your wishlist..." 
-        color={colors.primary}
-      />
-    );
+    return <FullScreenLoader message="Loading your wishlist..." color={colors.primary} />;
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-       <View style={[styles.header, { backgroundColor: colors.surface }]}>
-    <View style={styles.headerContent}>
-      <TouchableOpacity 
-        style={styles.backButton}
-        onPress={() => router.back()}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-      >
-        <Ionicons name="arrow-back" size={24} color={colors.text} />
-      </TouchableOpacity>
-      
-      <View style={styles.headerTextContainer}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          My Wishlist
-        </Text>
-        <Text style={[styles.itemCount, { color: colors.textSecondary }]}>
-          {wishlistProducts.length} {wishlistProducts.length === 1 ? 'item' : 'items'}
-        </Text>
-      </View>
-    </View>
-  </View>
+    <View style={styles.container}>
+      {/* ── Header ── */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.7} accessibilityRole="button">
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
+        </TouchableOpacity>
 
-      {/* Error Display */}
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerEyebrow}>IDEAL FURNITURE</Text>
+          <Text style={styles.headerTitle}>My Wishlist</Text>
+        </View>
+
+        <View style={styles.countBadge}>
+          <Text style={styles.countBadgeNumber}>{wishlistProducts.length}</Text>
+          <Text style={styles.countBadgeLabel}>{wishlistProducts.length === 1 ? 'item' : 'items'}</Text>
+        </View>
+      </View>
+
+      {/* ── Error banner ── */}
       {error && (
-        <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
-          <Ionicons name="alert-circle" size={20} color={colors.error} />
-          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle" size={16} color={colors.error} />
+          <Text style={styles.errorBannerText}>{error}</Text>
           <TouchableOpacity onPress={clearError} testID="clear-error-button">
-            <Ionicons name="close" size={20} color={colors.error} />
+            <Ionicons name="close" size={18} color={colors.error} />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Wishlist Content */}
+      {/* ── List eyebrow ── */}
+      {wishlistProducts.length > 0 && (
+        <View style={styles.listHeader}>
+          <View style={styles.listEyebrowRow}>
+            <Ionicons name="heart-outline" size={13} color={colors.primary} />
+            <Text style={styles.listEyebrow}>Saved Items</Text>
+          </View>
+          <Text style={styles.listCount}>{wishlistProducts.length} saved</Text>
+        </View>
+      )}
+
       <FlatList
         data={wishlistProducts}
         renderItem={renderWishlistItem}
@@ -323,25 +288,13 @@ const Wishlist: React.FC = () => {
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
         }
         ListEmptyComponent={renderEmptyState}
       />
 
-      {/* Loading Overlay for Cart Operations */}
-      {cartLoading && (
-        <LoadingSpinner 
-          message="Adding to cart..." 
-          color={colors.primary}
-        />
-      )}
+      {cartLoading && <LoadingSpinner message="Adding to cart..." color={colors.primary} />}
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertVisible}
         type={alertConfig.type}
@@ -353,75 +306,157 @@ const Wishlist: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
+
+  // ── Header ───────────────────────────────────────────────────────────────
   header: {
-    marginTop: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 52,
+    paddingBottom: 14,
+    backgroundColor: colors.stickyBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: `${colors.primary}38`,
   },
   backButton: {
-    padding: 8,
-    marginRight: 12,
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerEyebrow: {
+    fontSize: 9,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    fontWeight: '600',
+    marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
+    color: colors.text,
+    letterSpacing: 0.3,
   },
-  headerTextContainer: {
-    flex: 1,
+  countBadge: {
+    alignItems: 'center',
+    backgroundColor: colors.primaryDim,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    minWidth: 40,
   },
-  itemCount: {
-    fontSize: 14,
-    fontWeight: '500',
+  countBadgeNumber: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.primary,
+    lineHeight: 20,
   },
-  errorContainer: {
+  countBadgeLabel: {
+    fontSize: 9,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+
+  // ── Error banner ──────────────────────────────────────────────────────────
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    marginHorizontal: 20,
-    marginTop: 10,
-    borderRadius: 8,
     gap: 8,
+    backgroundColor: `${colors.error}12`,
+    borderWidth: 1,
+    borderColor: `${colors.error}40`,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 10,
   },
-  errorText: {
+  errorBannerText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
+    color: colors.error,
     fontWeight: '500',
   },
+
+  // ── List header ───────────────────────────────────────────────────────────
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 6,
+  },
+  listEyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  listEyebrow: {
+    fontSize: 11,
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  listCount: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
+  },
+
+  // ── List layout ───────────────────────────────────────────────────────────
   listContainer: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 100,
   },
   row: {
     justifyContent: 'space-between',
   },
+
+  // ── Item card ─────────────────────────────────────────────────────────────
   itemContainer: {
     width: ITEM_WIDTH,
-    borderRadius: 12,
-    marginBottom: 20,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: 'hidden',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  heartEmoji: {
-    fontSize: 16,
+  cardAccentLine: {
+    height: 2,
+    backgroundColor: colors.primary,
+    opacity: 0.5,
   },
   imageContainer: {
     position: 'relative',
-    height: ITEM_WIDTH * 0.8,
+    height: ITEM_WIDTH * 0.82,
+    backgroundColor: colors.card,
   },
   productImage: {
     width: '100%',
@@ -432,66 +467,55 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.card,
   },
   removeButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.modalOverlay,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 4,
+  heartEmoji: {
+    fontSize: 14,
   },
-  discountText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
+  outOfStockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15,12,8,0.45)',
   },
+
+  // Product info
   productInfo: {
     padding: 12,
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-    lineHeight: 18,
+    gap: 5,
   },
   productCategory: {
-    fontSize: 12,
-    marginBottom: 8,
+    fontSize: 9,
+    letterSpacing: 1.5,
+    color: colors.primary,
+    fontWeight: '600',
   },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 6,
+  productName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    lineHeight: 18,
   },
   currentPrice: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-  },
-  originalPrice: {
-    fontSize: 12,
-    textDecorationLine: 'line-through',
+    color: colors.primary,
   },
   stockContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 4,
+    gap: 5,
   },
   stockDot: {
     width: 6,
@@ -506,54 +530,90 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: 6,
-    gap: 4,
-  },
-  cartIcon: {
-    marginRight: 2,
+    gap: 5,
+    paddingVertical: 9,
+    borderRadius: 8,
+    marginTop: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 3,
   },
   addToCartText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
+
+  // ── Empty state ───────────────────────────────────────────────────────────
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
-    paddingTop: 60,
+    paddingTop: 80,
+    gap: 12,
   },
-  emptyIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
+  emptyIconRing: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: colors.primaryDim,
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyIconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    backgroundColor: colors.primaryDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyEyebrow: {
+    fontSize: 11,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    fontWeight: '600',
   },
   emptyTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 12,
+    color: colors.text,
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
   emptyMessage: {
-    fontSize: 16,
+    fontSize: 14,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 32,
   },
   shopNowButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 13,
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 6,
   },
   shopNowText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.primaryText,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
 });
 

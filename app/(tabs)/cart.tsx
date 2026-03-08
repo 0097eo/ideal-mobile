@@ -13,12 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '@/context/CartContext';
 import { CartItem } from '@/types/cart';
-import { useThemes } from '@/hooks/themes';
+import { useThemes, AppColors } from '@/hooks/themes';
 import { LoadingSpinner, FullScreenLoader } from '@/components/LoadingSpinner';
 import CustomAlert from '@/components/CustomAlert';
 import { useRouter } from 'expo-router';
 
-
+// ─── Component ────────────────────────────────────────────────────────────────
 const Cart: React.FC = () => {
   const {
     cart,
@@ -34,11 +34,11 @@ const Cart: React.FC = () => {
   } = useCart();
 
   const { colors } = useThemes();
+  const styles = makeStyles(colors);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<number>>(new Set());
   const router = useRouter();
-  
-  // Alert states
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     type: 'info' as 'success' | 'error' | 'warning' | 'info',
@@ -57,19 +57,15 @@ const Cart: React.FC = () => {
   };
 
   const showAlert = (config: Partial<typeof alertConfig>) => {
-    setAlertConfig(prev => ({...prev, ...config}));
+    setAlertConfig(prev => ({ ...prev, ...config }));
     setAlertVisible(true);
   };
 
-  const hideAlert = () => {
-    setAlertVisible(false);
-  };
+  const hideAlert = () => setAlertVisible(false);
 
   const handleQuantityUpdate = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 0) return;
-
     setUpdatingItems(prev => new Set(prev).add(itemId));
-    
     try {
       if (newQuantity === 0) {
         await removeCartItem(itemId);
@@ -77,7 +73,8 @@ const Cart: React.FC = () => {
         await updateCartItem(itemId, newQuantity);
       }
     } catch (error) {
-      // Error is handled by context
+      // Error handled by context
+      
     } finally {
       setUpdatingItems(prev => {
         const newSet = new Set(prev);
@@ -102,68 +99,57 @@ const Cart: React.FC = () => {
       type: 'warning',
       title: 'Clear Cart',
       message: 'Are you sure you want to remove all items from your cart?',
-      onConfirm: async () => {
-        await clearCart();
-      },
+      onConfirm: async () => { await clearCart(); },
       showCancel: true,
     });
   };
 
+  // ── Cart Item ──────────────────────────────────────────────────────────────
   const renderCartItem = (item: CartItem) => {
     const isUpdating = updatingItems.has(item.id);
-    const styles = createStyles(colors);
-        
     return (
       <View key={item.id} style={styles.cartItem}>
+        <View style={styles.cardAccentLine} />
         <View style={styles.itemHeader}>
-          <Image
-            source={{
-              uri: item.product_image || 'https://via.placeholder.com/80x80?text=No+Image'
-            }}
-            style={styles.productImage}
-            resizeMode="cover"
-          />
-          
+          <View style={styles.imageWrapper}>
+            <Image
+              source={{ uri: item.product_image || 'https://via.placeholder.com/80x80?text=No+Image' }}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
+          </View>
           <View style={styles.itemDetails}>
-            <Text style={styles.productName} numberOfLines={2}>
-              {item.product_name}
-            </Text>
-            <Text style={styles.productPrice}>
-              KSh {Math.floor(parseFloat(item.product_price)).toLocaleString()}
-            </Text>
-            <Text style={styles.quantityText}>
-              Quantity: {item.quantity}
-            </Text>
-            <Text style={styles.subtotal}>
-              Subtotal: KSh {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}
-            </Text>
+            <Text style={styles.productName} numberOfLines={2}>{item.product_name}</Text>
+            <Text style={styles.productPrice}>KSh {Math.floor(parseFloat(item.product_price)).toLocaleString()}</Text>
+            <Text style={styles.quantityText}>Quantity: {item.quantity}</Text>
+            <Text style={styles.subtotal}>Subtotal: KSh {Math.floor(parseFloat(item.product_price) * item.quantity).toLocaleString()}</Text>
           </View>
         </View>
 
-        <View style={styles.itemActions}>
+        <View style={styles.itemFooter}>
           <View style={styles.quantityControls}>
             <TouchableOpacity
               style={[styles.quantityButton, isUpdating && styles.disabledButton]}
               onPress={() => handleQuantityUpdate(item.id, item.quantity - 1)}
               disabled={isUpdating}
             >
-              <Ionicons name="remove" size={20} color={colors.textSecondary} />
+              <Ionicons name="remove" size={18} color={colors.primary} />
             </TouchableOpacity>
-                    
+
             <View style={styles.quantityDisplay}>
               {isUpdating ? (
                 <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Text style={styles.quantityText}>{item.quantity}</Text>
+                <Text style={styles.quantityCount}>{item.quantity}</Text>
               )}
             </View>
-                    
+
             <TouchableOpacity
               style={[styles.quantityButton, isUpdating && styles.disabledButton]}
               onPress={() => handleQuantityUpdate(item.id, item.quantity + 1)}
               disabled={isUpdating}
             >
-              <Ionicons name="add" size={20} color={colors.textSecondary} />
+              <Ionicons name="add" size={18} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -173,61 +159,67 @@ const Cart: React.FC = () => {
             disabled={isUpdating}
             accessibilityLabel={`Remove ${item.product_name}`}
           >
-            <Ionicons name="trash-outline" size={20} color={colors.error} />
+            <Ionicons name="trash-outline" size={17} color={colors.error} />
+            <Text style={styles.removeButtonText}>Remove</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   };
 
-  const renderEmptyCart = () => {
-    const styles = createStyles(colors);
-    return (
-      <View style={styles.emptyCart}>
-        <Ionicons name="cart" size={80} color={colors.textTertiary} />
-        <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
-        <Text style={styles.emptyCartSubtitle}>
-          Add some items to get started
-        </Text>
+  // ── Empty state ────────────────────────────────────────────────────────────
+  const renderEmptyCart = () => (
+    <View style={styles.emptyCart}>
+      <View style={styles.emptyIconRing}>
+        <View style={styles.emptyIconInner}>
+          <Ionicons name="cart-outline" size={34} color={colors.primary} />
+        </View>
       </View>
-    );
-  };
+      <Text style={styles.emptyEyebrow}>Your Cart</Text>
+      <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+      <Text style={styles.emptyCartSubtitle}>Add some items to get started</Text>
+    </View>
+  );
 
-  const renderError = () => {
-    const styles = createStyles(colors);
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
-        <Text style={styles.errorTitle}>Something went wrong</Text>
-        <Text style={styles.errorMessage}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => {
-          clearError();
-          fetchCart();
-        }}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </TouchableOpacity>
+  // ── Error state ────────────────────────────────────────────────────────────
+  const renderError = () => (
+    <View style={styles.errorContainer}>
+      <View style={styles.errorIconRing}>
+        <Ionicons name="alert-circle-outline" size={36} color={colors.error} />
       </View>
-    );
-  };
-
-  const styles = createStyles(colors);
+      <Text style={styles.errorEyebrow}>Connection Error</Text>
+      <Text style={styles.errorTitle}>Something went wrong</Text>
+      <Text style={styles.errorMessage}>{error}</Text>
+      <TouchableOpacity style={styles.retryButton} onPress={() => { clearError(); fetchCart(); }}>
+        <Ionicons name="reload-outline" size={16} color={colors.primaryText} />
+        <Text style={styles.retryButtonText}>Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} testID="back-button">
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cart</Text>
-        {cart.items.length > 0 && (
+
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerEyebrow}>IDEAL FURNITURE</Text>
+          <Text style={styles.headerTitle}>Cart</Text>
+        </View>
+
+        {cart.items.length > 0 ? (
           <TouchableOpacity onPress={handleClearCart} style={styles.clearButton}>
             <Text style={styles.clearButtonText}>Clear</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={styles.headerSpacer} />
         )}
       </View>
 
-      {/* Content */}
+      {/* ── Content ── */}
       {error ? (
         renderError()
       ) : loading && cart.items.length === 0 ? (
@@ -236,11 +228,20 @@ const Cart: React.FC = () => {
         renderEmptyCart()
       ) : (
         <>
+          <View style={styles.listHeader}>
+            <View style={styles.listEyebrowRow}>
+              <Ionicons name="cube-outline" size={13} color={colors.primary} />
+              <Text style={styles.listEyebrow}>Your Items</Text>
+            </View>
+            <Text style={styles.listCount}>{getCartItemCount()} item{getCartItemCount() !== 1 ? 's' : ''}</Text>
+          </View>
+
           <ScrollView
             style={styles.cartList}
+            showsVerticalScrollIndicator={false}
             refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
+              <RefreshControl
+                refreshing={refreshing}
                 onRefresh={onRefresh}
                 tintColor={colors.primary}
                 colors={[colors.primary]}
@@ -248,44 +249,45 @@ const Cart: React.FC = () => {
             }
           >
             {cart.items.map(renderCartItem)}
+            <View style={styles.listBottomSpacing} />
           </ScrollView>
 
-          {/* Cart Summary */}
+          {/* ── Cart summary ── */}
           <View style={styles.cartSummary}>
+            <View style={styles.summarySeparator} />
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>
-                Items ({getCartItemCount()})
-              </Text>
+              <View>
+                <Text style={styles.summaryEyebrow}>Order Total</Text>
+                <Text style={styles.summaryLabel}>Items ({getCartItemCount()})</Text>
+              </View>
               <Text style={styles.summaryValue}>
                 KSh {Math.floor(getCartTotal()).toLocaleString()}
               </Text>
             </View>
-            
-            <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push('/(screens)/checkout')}>
-              <Text style={styles.checkoutButtonText}>
-                Proceed to Checkout
-              </Text>
+
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              onPress={() => router.push('/(screens)/checkout')}
+            >
+              <Ionicons name="card-outline" size={18} color={colors.primaryText} />
+              <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+              <Ionicons name="arrow-forward" size={16} color={colors.primaryText} />
             </TouchableOpacity>
           </View>
         </>
       )}
 
-      {/* Loading Overlay */}
       {loading && cart.items.length > 0 && (
         <LoadingSpinner message="Updating cart..." />
       )}
 
-      {/* Custom Alert */}
       <CustomAlert
         visible={alertVisible}
         type={alertConfig.type}
         title={alertConfig.title}
         message={alertConfig.message}
         onClose={hideAlert}
-        onConfirm={() => {
-          alertConfig.onConfirm();
-          hideAlert();
-        }}
+        onConfirm={() => { alertConfig.onConfirm(); hideAlert(); }}
         showCancel={alertConfig.showCancel}
         confirmText={alertConfig.confirmText}
         cancelText={alertConfig.cancelText}
@@ -294,186 +296,241 @@ const Cart: React.FC = () => {
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
+// ─── Styles ───────────────────────────────────────────────────────────────────
+const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
+
+  // ── Header ───────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.surface,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: colors.stickyBackground,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: `${colors.primary}38`,
   },
   backButton: {
-    padding: 8,
-    // The zIndex ensures the back button is pressable and not covered by the centered title
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
     zIndex: 1,
   },
-  headerTitle: {
+  headerCenter: {
     position: 'absolute',
     left: 0,
     right: 0,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: 'bold',
+    alignItems: 'center',
+  },
+  headerEyebrow: {
+    fontSize: 9,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.text,
+    letterSpacing: 0.3,
   },
   clearButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: `${colors.error}40`,
+    borderRadius: 8,
+    backgroundColor: `${colors.error}12`,
     zIndex: 1,
   },
   clearButtonText: {
     color: colors.error,
-    fontSize: 16,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  headerSpacer: { width: 40 },
+
+  // ── List eyebrow ──────────────────────────────────────────────────────────
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  listEyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  listEyebrow: {
+    fontSize: 11,
+    letterSpacing: 2.5,
+    textTransform: 'uppercase',
+    color: colors.primary,
     fontWeight: '600',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    backgroundColor: colors.background,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 16,
+  listCount: {
+    fontSize: 12,
     color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
+    letterSpacing: 0.3,
   },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyCart: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    backgroundColor: colors.background,
-  },
-  emptyCartTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  emptyCartSubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  cartList: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+
+  // ── Cart list ─────────────────────────────────────────────────────────────
+  cartList: { flex: 1 },
+  listBottomSpacing: { height: 16 },
+
+  // ── Cart item card ────────────────────────────────────────────────────────
   cartItem: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
-    marginVertical: 4,
-    padding: 16,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  cardAccentLine: {
+    height: 2,
+    backgroundColor: colors.primary,
+    opacity: 0.55,
   },
   itemHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    padding: 16,
+    paddingBottom: 12,
+  },
+  imageWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
   },
   productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: colors.border,
+    width: 82,
+    height: 82,
+    backgroundColor: colors.card,
   },
   itemDetails: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 14,
+    gap: 4,
   },
   productName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 4,
+    lineHeight: 21,
+    letterSpacing: 0.1,
   },
   productPrice: {
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '500',
-    marginBottom: 4,
+    fontWeight: '600',
   },
-  subtotal: {
-    fontSize: 14,
+  quantityText: {
+    fontSize: 13,
     color: colors.textSecondary,
   },
-  itemActions: {
+  subtotal: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+
+  // ── Item footer ───────────────────────────────────────────────────────────
+  itemFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.card,
   },
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
   quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.primaryDim,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  disabledButton: {
-    opacity: 0.5,
-  },
+  disabledButton: { opacity: 0.4 },
   quantityDisplay: {
     minWidth: 40,
-    height: 32,
+    height: 34,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 10,
   },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: '600',
+  quantityCount: {
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.text,
   },
   removeButton: {
-    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${colors.error}40`,
+    backgroundColor: `${colors.error}12`,
   },
+  removeButtonText: {
+    color: colors.error,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // ── Cart summary ──────────────────────────────────────────────────────────
   cartSummary: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.stickyBackground,
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 32,
+    paddingTop: 0,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  summarySeparator: {
+    height: 1,
+    backgroundColor: colors.primary,
+    opacity: 0.25,
+    marginBottom: 16,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -481,26 +538,154 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  summaryLabel: {
-    fontSize: 18,
+  summaryEyebrow: {
+    fontSize: 10,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: colors.textTertiary,
     fontWeight: '600',
-    color: colors.text,
+    marginBottom: 3,
+  },
+  summaryLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   summaryValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '800',
     color: colors.primary,
+    letterSpacing: 0.5,
   },
   checkoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
     backgroundColor: colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.30,
+    shadowRadius: 12,
+    elevation: 8,
   },
   checkoutButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: colors.primaryText,
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+
+  // ── Empty state ───────────────────────────────────────────────────────────
+  emptyCart: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  emptyIconRing: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: colors.primaryDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  emptyIconInner: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 1,
+    borderColor: colors.primaryBorder,
+    backgroundColor: colors.primaryDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyEyebrow: {
+    fontSize: 11,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  emptyCartTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  emptyCartSubtitle: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+
+  // ── Error state ───────────────────────────────────────────────────────────
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    gap: 12,
+  },
+  errorIconRing: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: `${colors.error}12`,
+    borderWidth: 1,
+    borderColor: `${colors.error}40`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  errorEyebrow: {
+    fontSize: 11,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    color: colors.error,
+    fontWeight: '600',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  errorMessage: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 28,
+    paddingVertical: 13,
+    borderRadius: 12,
+    marginTop: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  retryButtonText: {
+    color: colors.primaryText,
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.4,
   },
 });
 
