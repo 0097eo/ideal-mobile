@@ -2,9 +2,9 @@
   "expo": {
     "name": "Ideal Furniture & Decor",
     "slug": "ideal-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.jpeg",
+    "icon": "./assets/images/logo.png",
     "scheme": "idealmobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,8 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.jpeg",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/logo.png",
+        "backgroundColor": "#0F0C08"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.okeloe.idealmobile",
@@ -30,10 +30,15 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo.jpeg",
-          "imageWidth": 200,
+          "backgroundColor": "#0F0C08",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 120,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "dark": {
+            "backgroundColor": "#0F0C08",
+            "image": "./assets/images/logo.png",
+            "resizeMode": "contain"
+          }
         }
       ],
       "expo-web-browser",
@@ -52,8 +57,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5e2890ef-1e17-4373-8e91-cc415aaea1eb"
+        "projectId": "0f182b33-97b5-4e1b-b6b8-5a0d27e70a72"
       }
-    }
+    },
+    "owner": "okeloemmanuel"
   }
 }
