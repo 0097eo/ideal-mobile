@@ -19,7 +19,6 @@ import CustomAlert from '@/components/CustomAlert';
 import { FullScreenLoader } from '@/components/LoadingSpinner';
 import { Ionicons } from '@expo/vector-icons';
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────
 interface ProductResponse {
   count: number;
   next: string | null;
@@ -48,7 +47,6 @@ interface AlertState {
   showCancel?: boolean;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 const Shop = () => {
   const { colors } = useThemes();
   const styles = makeStyles(colors);
@@ -191,7 +189,15 @@ const Shop = () => {
 
   const activeFilterCount = [filters.category, filters.material, filters.condition, filters.minPrice, filters.maxPrice].filter(Boolean).length;
 
-  const renderProductItem = ({ item }: { item: Product }) => <ProductCard product={item} showFullWidth={false} />;
+  // Pad to even number so last row always has 2 equal-width cards
+  const paddedProducts = products.length % 2 !== 0
+    ? [...products, null]
+    : products;
+
+  const renderProductItem = ({ item }: { item: Product | null }) => {
+    if (!item) return <View style={styles.emptyCard} />;
+    return <ProductCard product={item} showFullWidth={false} />;
+  };
 
   const renderFooter = () => {
     if (!hasNextPage) return null;
@@ -262,7 +268,6 @@ const Shop = () => {
     </Modal>
   );
 
-  // ── Loading state ──────────────────────────────────────────────────────────
   if (loading && products.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
@@ -271,7 +276,6 @@ const Shop = () => {
     );
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
   if (error && products.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
@@ -290,10 +294,8 @@ const Shop = () => {
     );
   }
 
-  // ── Main render ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
-      {/* ── Header ── */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
@@ -332,7 +334,6 @@ const Shop = () => {
         </View>
       </View>
 
-      {/* ── Filters panel ── */}
       {showFilters && (
         <View style={styles.filtersContainer}>
           <View style={styles.filtersAccentLine} />
@@ -380,7 +381,6 @@ const Shop = () => {
         </View>
       )}
 
-      {/* ── List eyebrow ── */}
       {products.length > 0 && (
         <View style={styles.listHeader}>
           <View style={styles.listEyebrowRow}>
@@ -393,7 +393,6 @@ const Shop = () => {
         </View>
       )}
 
-      {/* ── Products / Empty ── */}
       {products.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconRing}>
@@ -408,10 +407,11 @@ const Shop = () => {
         <FlatList
           style={styles.productsList}
           contentContainerStyle={styles.productsContainer}
-          data={products}
+          data={paddedProducts}
           renderItem={renderProductItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => item ? item.id.toString() : `empty-${index}`}
           numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.1}
           ListFooterComponent={renderFooter}
@@ -438,14 +438,11 @@ const Shop = () => {
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const makeStyles = (colors: AppColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-
-  // ── Header ───────────────────────────────────────────────────────────────
   header: {
     paddingHorizontal: 20,
     paddingTop: 12,
@@ -496,8 +493,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '600',
   },
-
-  // ── Search ────────────────────────────────────────────────────────────────
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -555,8 +550,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     fontWeight: '800',
     color: colors.primaryText,
   },
-
-  // ── Filters panel ─────────────────────────────────────────────────────────
   filtersContainer: {
     backgroundColor: colors.stickyBackground,
     borderBottomWidth: 1,
@@ -646,8 +639,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 13,
     letterSpacing: 0.3,
   },
-
-  // ── List header ───────────────────────────────────────────────────────────
   listHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -673,15 +664,19 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 0.3,
   },
-
-  // ── Products list ─────────────────────────────────────────────────────────
   productsList: { flex: 1 },
   productsContainer: {
-    padding: 8,
+    paddingTop: 8,
     paddingBottom: 32,
   },
-
-  // ── Load more footer ──────────────────────────────────────────────────────
+  columnWrapper: {
+    paddingHorizontal: 8,
+  },
+  emptyCard: {
+    flex: 1,
+    maxWidth: '50%',
+    margin: 6,
+  },
   loadMoreContainer: {
     paddingVertical: 20,
     alignItems: 'center',
@@ -702,8 +697,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 13,
     letterSpacing: 0.3,
   },
-
-  // ── Empty state ───────────────────────────────────────────────────────────
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -745,8 +738,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-
-  // ── Error state ───────────────────────────────────────────────────────────
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -799,8 +790,6 @@ const makeStyles = (colors: AppColors) => StyleSheet.create({
     fontSize: 15,
     letterSpacing: 0.4,
   },
-
-  // ── Category Modal ────────────────────────────────────────────────────────
   modalOverlay: {
     flex: 1,
     backgroundColor: colors.modalOverlay,

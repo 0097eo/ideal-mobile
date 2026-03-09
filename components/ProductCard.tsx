@@ -29,7 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [imageError, setImageError] = useState(false);
 
-  const styles = makeStyles(colors);
+  const styles = makeStyles(colors, showFullWidth);
 
   const handleWishlistToggle = (e: any) => {
     e.preventDefault();
@@ -55,21 +55,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const conditionPalette = getConditionPalette(product.condition);
   const inWishlist = isInWishlist(product.id);
-  const cardWidth = showFullWidth
-    ? screenWidth - 32
-    : Math.floor((screenWidth - 48) / 2);
 
   return (
     <Link href={`/product/${product.id}`} asChild>
       <TouchableOpacity
-        style={[styles.container, { width: cardWidth }]}
+        style={styles.container}
         onPress={() => onPress?.(product)}
         activeOpacity={0.82}
       >
-        {/* Gold top accent */}
         <View style={styles.cardAccentLine} />
 
-        {/* Image */}
         <View style={styles.imageContainer}>
           {imageError ? (
             <View style={styles.imageFallback}>
@@ -84,14 +79,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           )}
 
-          {/* Sold out overlay */}
           {!product.is_available && (
             <View style={styles.soldOutOverlay}>
               <Text style={styles.soldOutText}>SOLD OUT</Text>
             </View>
           )}
 
-          {/* Condition badge */}
           {product.is_available && (
             <View style={[
               styles.conditionBadge,
@@ -104,7 +97,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </View>
           )}
 
-          {/* Wishlist button */}
           <TouchableOpacity
             style={[styles.wishlistButton, inWishlist && styles.wishlistButtonActive]}
             onPress={handleWishlistToggle}
@@ -114,7 +106,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* Info */}
         <View style={styles.content}>
           {product.category_name && (
             <Text style={styles.categoryText} numberOfLines={1}>
@@ -140,148 +131,151 @@ const ProductCard: React.FC<ProductCardProps> = ({
   );
 };
 
-const makeStyles = (colors: AppColors) => StyleSheet.create({
-  container: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    margin: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.14,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  cardAccentLine: {
-    height: 2,
-    backgroundColor: colors.primary,
-    opacity: 0.45,
-  },
-  imageContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 170,
-    backgroundColor: colors.card,
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-  },
-  imageFallback: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.card,
-  },
-  imageFallbackIcon: {
-    fontSize: 40,
-    opacity: 0.4,
-  },
-  soldOutOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.modalOverlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  soldOutText: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 3,
-  },
-  conditionBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  conditionDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  conditionText: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  wishlistButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.modalOverlay,
-    borderWidth: 1,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  wishlistButtonActive: {
-    backgroundColor: `${colors.error}26`,
-    borderColor: `${colors.error}47`,
-  },
-  wishlistEmoji: {
-    fontSize: 14,
-  },
-  content: {
-    paddingHorizontal: 12,
-    paddingBottom: 14,
-    paddingTop: 10,
-    gap: 4,
-  },
-  categoryText: {
-    fontSize: 9,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  productName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-    height: 18,
-    letterSpacing: 0.1,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 2,
-  },
-  price: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.primary,
-    letterSpacing: 0.3,
-  },
-  outOfStockPill: {
-    backgroundColor: `${colors.error}1A`,
-    borderWidth: 1,
-    borderColor: `${colors.error}40`,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-  },
-  outOfStockText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: colors.error,
-    letterSpacing: 0.5,
-  },
-});
+const makeStyles = (colors: AppColors, showFullWidth: boolean) =>
+  StyleSheet.create({
+    container: {
+      width: showFullWidth ? screenWidth - 32 : Math.floor((screenWidth - 48) / 2),
+      height: 280,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      margin: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.14,
+      shadowRadius: 10,
+      elevation: 4,
+    },
+    cardAccentLine: {
+      height: 2,
+      backgroundColor: colors.primary,
+      opacity: 0.45,
+    },
+    imageContainer: {
+      position: 'relative',
+      width: '100%',
+      height: 170,
+      backgroundColor: colors.card,
+    },
+    productImage: {
+      width: '100%',
+      height: '100%',
+    },
+    imageFallback: {
+      width: '100%',
+      height: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.card,
+    },
+    imageFallbackIcon: {
+      fontSize: 40,
+      opacity: 0.4,
+    },
+    soldOutOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.modalOverlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    soldOutText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '800',
+      letterSpacing: 3,
+    },
+    conditionBadge: {
+      position: 'absolute',
+      top: 10,
+      left: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+    },
+    conditionDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
+    },
+    conditionText: {
+      fontSize: 9,
+      fontWeight: '700',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+    },
+    wishlistButton: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      backgroundColor: colors.modalOverlay,
+      borderWidth: 1,
+      borderColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    wishlistButtonActive: {
+      backgroundColor: `${colors.error}26`,
+      borderColor: `${colors.error}47`,
+    },
+    wishlistEmoji: {
+      fontSize: 14,
+    },
+    content: {
+      paddingHorizontal: 12,
+      paddingBottom: 14,
+      paddingTop: 10,
+      gap: 4,
+    },
+    categoryText: {
+      fontSize: 9,
+      letterSpacing: 1.5,
+      textTransform: 'uppercase',
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    productName: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+      height: 18,
+      letterSpacing: 0.1,
+    },
+    priceRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 2,
+    },
+    price: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: colors.primary,
+      letterSpacing: 0.3,
+    },
+    outOfStockPill: {
+      backgroundColor: `${colors.error}1A`,
+      borderWidth: 1,
+      borderColor: `${colors.error}40`,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 5,
+    },
+    outOfStockText: {
+      fontSize: 9,
+      fontWeight: '700',
+      color: colors.error,
+      letterSpacing: 0.5,
+    },
+  });
 
 export default ProductCard;
